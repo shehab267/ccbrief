@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync, copyFileSync, existsSync, readFileSync } from
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { commandString } from '../paths.js'
-import { hasStatusLine, patchSettings, backupName } from '../installer.js'
+import { hasStatusLine, patchSettings, backupName, ownsStatusLine } from '../installer.js'
 import { DEFAULT_CONFIG, refreshIntervalFor, loadConfig } from '../config.js'
 import { render } from '../render.js'
 
@@ -25,12 +25,16 @@ export async function runInit({ dir, copyRenderer, confirm, log, now = Date.now 
   let existing = {}
   if (existsSync(settingsPath)) {
     try { existing = JSON.parse(readFileSync(settingsPath, 'utf8')) } catch { existing = {} }
-    if (hasStatusLine(existing)) {
+    const ours = ownsStatusLine(existing, ccbrief)
+    // Only prompt before replacing a statusLine we don't own (re-running over our
+    // own install is an idempotent update, not a clobber).
+    if (hasStatusLine(existing) && !ours) {
       const ok = await confirm(existing.statusLine)
       if (!ok) { log('Aborted — existing statusLine kept.'); return { changed: false, backup: null } }
     }
-    // Back up the original (timestamped so re-runs don't spam a single .bak).
-    writeFileSync(join(dir, backupName(now())), readFileSync(settingsPath, 'utf8'))
+    // Back up only settings we don't own: a re-run must not overwrite the pristine
+    // pre-ccbrief backup with our own install (which would defeat uninstall).
+    if (!ours) writeFileSync(join(dir, backupName(now())), readFileSync(settingsPath, 'utf8'))
   }
 
   mkdirSync(ccbrief, { recursive: true })

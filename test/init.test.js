@@ -4,6 +4,7 @@ import { mkdtempSync, writeFileSync, readFileSync, existsSync, readdirSync } fro
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { runInit } from '../src/commands/init.js'
+import { runUninstall } from '../src/commands/uninstall.js'
 
 const seams = (over = {}) => ({ copyRenderer: () => {}, confirm: () => true, log: () => {}, now: () => 111, ...over })
 
@@ -34,4 +35,17 @@ test('pre-existing statusLine: aborts when confirm=false', async () => {
   assert.equal(res.changed, false)
   const settings = JSON.parse(readFileSync(join(dir, 'settings.json'), 'utf8'))
   assert.equal(settings.statusLine.command, 'old') // untouched
+})
+
+test('re-init keeps one pristine backup; uninstall restores pre-ccbrief settings', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccbrief-init-'))
+  writeFileSync(join(dir, 'settings.json'), JSON.stringify({ permissions: ['x'] }))
+  await runInit({ dir, ...seams({ now: () => 1000 }) })
+  await runInit({ dir, ...seams({ now: () => 2000 }) }) // re-run must NOT back up our own install again
+  const backups = readdirSync(dir).filter((f) => f.startsWith('settings.json.bak.'))
+  assert.equal(backups.length, 1) // only the pristine pre-ccbrief backup survives
+  await runUninstall({ dir, removeDir: false, log: () => {} })
+  const restored = JSON.parse(readFileSync(join(dir, 'settings.json'), 'utf8'))
+  assert.equal('statusLine' in restored, false)
+  assert.deepEqual(restored.permissions, ['x'])
 })

@@ -18,3 +18,13 @@ export function patchSettings(existing, { command, refreshInterval } = {}) {
 export function backupName(now) {
   return `settings.json.bak.${now}`
 }
+
+// Does this settings object's statusLine point at ccbrief's own renderer?
+// Lets `init` avoid backing up our own install on re-run (so the pristine
+// pre-ccbrief backup survives) and lets `uninstall` strip a residual block
+// from a backup that an older, buggy init captured.
+export function ownsStatusLine(settings, ccbriefDir) {
+  const cmd = settings?.statusLine?.command
+  if (typeof cmd !== 'string') return false
+  return cmd.includes(String(ccbriefDir).replace(/\\/g, '/') + '/statusline.js')
+}

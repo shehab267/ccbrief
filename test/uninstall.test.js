@@ -4,6 +4,7 @@ import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { runUninstall } from '../src/commands/uninstall.js'
+import { commandString } from '../src/paths.js'
 
 test('restores the most recent backup', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'ccbrief-un-'))
@@ -32,4 +33,17 @@ test('no backup + malformed settings.json → does not throw', async () => {
   writeFileSync(join(dir, 'settings.json'), '{ this is not: json')
   const res = await runUninstall({ dir, removeDir: false, log: () => {} })
   assert.deepEqual(res, { restored: false, removedBlock: false })
+})
+
+test('restoring a ccbrief-polluted backup strips the residual statusLine', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccbrief-un-'))
+  const cmd = commandString(join(dir, 'ccbrief')) // ccbrief's own renderer command
+  writeFileSync(join(dir, 'settings.json'), JSON.stringify({ statusLine: { type: 'command', command: cmd } }))
+  // A backup written by an older, buggy init that captured our own statusLine.
+  writeFileSync(join(dir, 'settings.json.bak.100'), JSON.stringify({ permissions: ['x'], statusLine: { type: 'command', command: cmd } }))
+  const res = await runUninstall({ dir, removeDir: false, log: () => {} })
+  const s = JSON.parse(readFileSync(join(dir, 'settings.json'), 'utf8'))
+  assert.equal('statusLine' in s, false)
+  assert.deepEqual(s.permissions, ['x'])
+  assert.equal(res.restored, true)
 })
