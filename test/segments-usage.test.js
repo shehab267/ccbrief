@@ -16,8 +16,9 @@ const rows = [
   ['duration hidden', 'duration', { cost: {} }, null],
   ['cost', 'cost', { cost: { total_cost_usd: 1.23 } }, '$1.23'],
   ['cost hidden', 'cost', { cost: {} }, null],
-  ['5h with countdown', 'fiveHour', { now: NOW, rate_limits: { five_hour: { used_percentage: 40, resets_at: NOW + 2 * 3_600_000 } } }, '5h 40% · 2h 0m'],
-  ['weekly reset passed → reset due', 'weekly', { now: NOW, rate_limits: { seven_day: { used_percentage: 12, resets_at: NOW - 60_000 } } }, '7d 12% · reset due'],
+  // resets_at is Unix epoch SECONDS (official contract); input.now is Date.now() ms.
+  ['5h with countdown', 'fiveHour', { now: NOW, rate_limits: { five_hour: { used_percentage: 40, resets_at: NOW / 1000 + 2 * 3600 } } }, '5h 40% · 2h 0m'],
+  ['weekly reset passed → reset due', 'weekly', { now: NOW, rate_limits: { seven_day: { used_percentage: 12, resets_at: NOW / 1000 - 60 } } }, '7d 12% · reset due'],
   ['5h hidden when rate_limits absent', 'fiveHour', { now: NOW, rate_limits: null }, null],
 ]
 

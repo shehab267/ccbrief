@@ -60,8 +60,9 @@ export const proMax = {
   context_window: { used_percentage: 73, remaining_percentage: 27, current_usage: { input_tokens: 150_000, output_tokens: 20_000 } },
   cost: { total_duration_ms: 9_000_000, total_cost_usd: 4.56 },
   rate_limits: {
-    five_hour: { used_percentage: 40, resets_at: NOW + 2 * 3_600_000 }, // 2h out
-    seven_day: { used_percentage: 12, resets_at: NOW - 60_000 },         // already passed → "reset due"
+    // resets_at is Unix epoch SECONDS per the official contract (not ms).
+    five_hour: { used_percentage: 40, resets_at: NOW / 1000 + 2 * 3600 }, // 2h out
+    seven_day: { used_percentage: 12, resets_at: NOW / 1000 - 60 },       // already passed → "reset due"
   },
   effort: { level: 'high' },
 }

@@ -35,7 +35,8 @@ function limit(label, key) {
     format: (input) => {
       const rl = input.rate_limits[key]
       const pct = Math.round(rl.used_percentage)
-      const tail = rl.resets_at != null ? ` · ${formatCountdown(rl.resets_at - input.now)}` : ''
+      // resets_at is Unix epoch SECONDS; input.now is Date.now() ms → convert before diffing.
+      const tail = rl.resets_at != null ? ` · ${formatCountdown(rl.resets_at * 1000 - input.now)}` : ''
       return `${label} ${pct}%${tail}`
     },
   }
