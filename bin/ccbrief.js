@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // ccbrief CLI — init / config / uninstall.
-// Scaffold stub: command implementations land in later milestones.
+import { createInterface } from 'node:readline/promises'
+import { runInit } from '../src/commands/init.js'
+import { configDir } from '../src/paths.js'
 
 const [cmd] = process.argv.slice(2)
 
@@ -15,8 +17,18 @@ usage:
 
 (v0.1.0 — under development)`
 
+// Prompt before replacing a statusLine block the user already configured.
+async function confirmReplace(existing) {
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  const answer = await rl.question(`A statusLine already exists:\n  ${existing.command}\nReplace it? [y/N] `)
+  rl.close()
+  return /^y(es)?$/i.test(answer.trim())
+}
+
 switch (cmd) {
   case 'init':
+    await runInit({ dir: configDir(), confirm: confirmReplace, log: (m) => console.log(m) })
+    break
   case 'config':
   case 'uninstall':
     console.log(`ccbrief: "${cmd}" is not implemented yet.`)
