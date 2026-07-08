@@ -1,19 +1,20 @@
 // Core segments. Each segment is a pure { id, section, isAvailable, format } object.
 // `repo` (Task 5) and `context` (Task 6) are appended to this file as they land.
+import { clean } from '../format.js'
 const basename = (p) => String(p ?? '').split(/[\\/]/).filter(Boolean).pop() ?? ''
 
 export const directory = {
   id: 'directory',
   section: 'core',
   isAvailable: (input) => Boolean(input?.workspace?.current_dir),
-  format: (input) => basename(input.workspace.current_dir),
+  format: (input) => clean(basename(input.workspace.current_dir)),
 }
 
 export const model = {
   id: 'model',
   section: 'core',
   isAvailable: (input) => Boolean(input?.model?.display_name),
-  format: (input) => input.model.display_name,
+  format: (input) => clean(input.model.display_name),
 }
 
 export const repo = {
@@ -21,8 +22,9 @@ export const repo = {
   section: 'core',
   isAvailable: (input) => Boolean(input?.git),
   format: (input, theme) => {
-    const name = input.workspace?.repo?.name ?? basename(input.workspace?.current_dir)
-    const { branch, added, removed } = input.git
+    const name = clean(input.workspace?.repo?.name ?? basename(input.workspace?.current_dir))
+    const branch = clean(input.git.branch)
+    const { added, removed } = input.git
     const glyph = theme.glyph('branch')
     const head = `${glyph ? glyph + ' ' : ''}${name}/${branch}`
     if (!added && !removed) return head
