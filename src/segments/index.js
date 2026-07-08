@@ -2,8 +2,9 @@
 // New segments are inserted into SEGMENTS in display order.
 import { directory, repo, context, model } from './core.js'
 import { tokens, remaining, duration, cost, fiveHour, weekly } from './usage.js'
+import { lines, pr, worktree } from './development.js'
 
-export const SEGMENTS = [directory, repo, context, model, tokens, remaining, duration, cost, fiveHour, weekly]
+export const SEGMENTS = [directory, repo, context, model, tokens, remaining, duration, cost, fiveHour, weekly, lines, pr, worktree]
 
 export const BY_ID = Object.fromEntries(SEGMENTS.map((s) => [s.id, s]))
 
