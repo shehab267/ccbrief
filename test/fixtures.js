@@ -38,7 +38,7 @@ export const noGit = {
   workspace: { current_dir: '/tmp/scratch' },
   git: null,
   model: { display_name: 'Sonnet' },
-  context_window: { used_percentage: 10, remaining_percentage: 90, current_usage: { input_tokens: 5_000 } },
+  context_window: { used_percentage: 10, remaining_percentage: 90, total_input_tokens: 5_000, total_output_tokens: 400, current_usage: { input_tokens: 5_000 } },
   cost: { total_duration_ms: 30_000, total_cost_usd: 0.02 },
 }
 
@@ -48,7 +48,7 @@ export const noRateLimits = {
   workspace: { current_dir: '/home/dev/ccbrief', repo: { name: 'ccbrief' } },
   git: { branch: 'main', added: 0, removed: 0 },
   model: { display_name: 'Opus' },
-  context_window: { used_percentage: 20, remaining_percentage: 80, current_usage: { input_tokens: 40_000 } },
+  context_window: { used_percentage: 20, remaining_percentage: 80, total_input_tokens: 40_000, total_output_tokens: 3_000, current_usage: { input_tokens: 40_000 } },
   cost: { total_duration_ms: 120_000, total_cost_usd: 0.1 },
   rate_limits: null, // non Pro/Max → absent
 }
@@ -75,7 +75,7 @@ export const withPr = {
   workspace: { current_dir: '/home/dev/ccbrief', repo: { name: 'ccbrief' }, git_worktree: '/home/dev/wt/ccbrief-pr' },
   git: { branch: 'feat/pr', added: 5, removed: 0 },
   model: { display_name: 'Opus' },
-  context_window: { used_percentage: 33, remaining_percentage: 67, current_usage: { input_tokens: 60_000 } },
+  context_window: { used_percentage: 33, remaining_percentage: 67, total_input_tokens: 60_000, total_output_tokens: 5_000, current_usage: { input_tokens: 60_000 } },
   cost: { total_duration_ms: 300_000, total_cost_usd: 0.5 },
   pr: { number: 7, review_state: 'approved', url: 'https://github.com/shehab267/ccbrief/pull/7' },
   agent: { name: 'reviewer' },
