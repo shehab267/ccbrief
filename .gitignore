@@ -141,3 +141,9 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Internal planning / design specs — kept local, not published
+docs/
+
+# Build output (bundled at publish time via esbuild)
+dist/

@@ -1,0 +1,47 @@
+{
+  "name": "ccbrief",
+  "version": "0.1.0",
+  "description": "A minimal, configurable status line for Claude Code.",
+  "type": "module",
+  "bin": {
+    "ccbrief": "./bin/ccbrief.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shehab267/ccbrief.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shehab267/ccbrief/issues"
+  },
+  "homepage": "https://github.com/shehab267/ccbrief#readme",
+  "keywords": [
+    "claude-code",
+    "statusline",
+    "terminal",
+    "cli",
+    "developer-tools"
+  ],
+  "author": "shehab267",
+  "license": "MIT",
+  "dependencies": {
+    "string-width": "^7.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
