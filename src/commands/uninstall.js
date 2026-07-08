@@ -17,7 +17,13 @@ export async function runUninstall({ dir, removeDir = false, log = () => {} }) {
     restored = true
     log(`Restored ${backups[0]}`)
   } else if (existsSync(settingsPath)) {
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    // No backup to restore: strip only our block. A malformed settings.json is
+    // not ours to rewrite — log and leave it untouched rather than crash.
+    let settings
+    try { settings = JSON.parse(readFileSync(settingsPath, 'utf8')) } catch {
+      log('settings.json is unreadable — left untouched (no backup to restore).')
+      return { restored, removedBlock }
+    }
     delete settings.statusLine
     writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
     removedBlock = true

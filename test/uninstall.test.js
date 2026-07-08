@@ -26,3 +26,10 @@ test('no backup → strips only the statusLine block', async () => {
   assert.deepEqual(settings.permissions, ['x'])
   assert.equal(res.removedBlock, true)
 })
+
+test('no backup + malformed settings.json → does not throw', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccbrief-un-'))
+  writeFileSync(join(dir, 'settings.json'), '{ this is not: json')
+  const res = await runUninstall({ dir, removeDir: false, log: () => {} })
+  assert.deepEqual(res, { restored: false, removedBlock: false })
+})
