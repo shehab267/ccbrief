@@ -9,11 +9,13 @@ import { join } from 'node:path'
 const CACHE_TTL_MS = 3_000
 
 // execFileSync (not exec) → no shell, so no injection from branch/dir names.
-// timeout bounds a hung git (e.g. credential prompt); maxBuffer keeps a huge
-// numstat in a monorepo from throwing on the 1 MB default. Either failure is
-// caught below → the git segment simply hides, never crashes the render.
+// timeout bounds a hung git (e.g. credential prompt); 3s matches the cache TTL
+// (git only runs that often) so it kills true hangs without clipping a slow but
+// valid diff in a large monorepo. maxBuffer keeps a huge numstat from throwing
+// on the 1 MB default. Either failure is caught below → the git segment simply
+// hides, never crashes the render.
 const defaultRun = (file, args, opts) =>
-  execFileSync(file, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 1_000, maxBuffer: 10 * 1024 * 1024, ...opts })
+  execFileSync(file, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 3_000, maxBuffer: 10 * 1024 * 1024, ...opts })
 
 // Cache filename must be stable per session yet confined to cacheDir — a
 // session_id carrying path separators must not escape it. Reduce to a safe token.
