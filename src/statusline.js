@@ -7,10 +7,9 @@
 import { render } from './render.js'
 import { collectGit } from './git.js'
 import { loadConfig } from './config.js'
+import { readConfigFile } from './paths.js'
 import { tmpdir } from 'node:os'
 
-// TEMPORARY (until Task 13): no config-file read yet, so load defaults. Task 13
-// swaps this for `loadConfig(readConfigFile())` once paths.js lands.
 function readStdin() {
   return new Promise((resolve) => {
     let data = ''
@@ -27,7 +26,7 @@ try {
   const input = JSON.parse(raw || '{}')
   input.now = Date.now() // injected so rate-limit countdowns tick each render
   input.git = collectGit(input, { cacheDir: tmpdir(), sessionId: input.session_id })
-  const config = loadConfig(null) // Task 13: loadConfig(readConfigFile())
+  const config = loadConfig(readConfigFile())
   const columns = Number(process.env.COLUMNS) || 80 // captured output → no TTY; read COLUMNS
   process.stdout.write(render(input, config, { columns }))
 } catch {
