@@ -29,3 +29,16 @@ export const repo = {
     return `${head} ${theme.color('green', `+${added}`)}/${theme.color('red', `-${removed}`)}`
   },
 }
+
+export const context = {
+  id: 'context',
+  section: 'core',
+  // Only when used_percentage is a real number: null early in a session and
+  // post-/compact → hide, never render a fabricated 0%. (0 itself is valid.)
+  isAvailable: (input) => input?.context_window?.used_percentage != null,
+  format: (input, theme) => {
+    const pct = Math.round(input.context_window.used_percentage)
+    const tone = pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green'
+    return `${theme.color(tone, `${pct}%`)} ${theme.bar(pct)}`
+  },
+}
