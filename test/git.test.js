@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { collectGit } from '../src/git.js'
+import { collectGit, gitCacheName } from '../src/git.js'
 
 function tmpRepo() {
   const dir = mkdtempSync(join(tmpdir(), 'ccbrief-git-'))
@@ -37,6 +37,14 @@ test('second call with same session_id uses cache (no spawn)', () => {
   const second = collectGit(args[0], { cacheDir, run })
   assert.deepEqual(second, first)
   assert.equal(spawned, false)
+})
+
+test('gitCacheName confines the cache filename (no path escape)', () => {
+  assert.equal(gitCacheName('abc-123_XYZ'), 'git-abc-123_XYZ.json') // safe chars kept as-is
+  const evil = gitCacheName('../../etc/passwd')
+  assert.ok(!evil.includes('/') && !evil.includes('..'), evil)      // cannot traverse out of cacheDir
+  assert.equal(gitCacheName('a/b\\c'), 'git-a_b_c.json')            // separators neutralized
+  assert.equal(gitCacheName(undefined), 'git-default.json')         // missing id → stable default
 })
 
 test('returns null outside a git repo', () => {

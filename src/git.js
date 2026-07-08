@@ -9,15 +9,24 @@ import { join } from 'node:path'
 const CACHE_TTL_MS = 3_000
 
 // execFileSync (not exec) → no shell, so no injection from branch/dir names.
+// timeout bounds a hung git (e.g. credential prompt); maxBuffer keeps a huge
+// numstat in a monorepo from throwing on the 1 MB default. Either failure is
+// caught below → the git segment simply hides, never crashes the render.
 const defaultRun = (file, args, opts) =>
-  execFileSync(file, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], ...opts })
+  execFileSync(file, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 1_000, maxBuffer: 10 * 1024 * 1024, ...opts })
+
+// Cache filename must be stable per session yet confined to cacheDir — a
+// session_id carrying path separators must not escape it. Reduce to a safe token.
+export function gitCacheName(sid) {
+  return `git-${String(sid ?? 'default').replace(/[^A-Za-z0-9_-]/g, '_')}.json`
+}
 
 export function collectGit(input, { cacheDir, sessionId, run = defaultRun, now = Date.now } = {}) {
   const cwd = input?.workspace?.current_dir
   const sid = sessionId ?? input?.session_id ?? 'default'
   if (!cwd) return null
 
-  const cacheFile = cacheDir ? join(cacheDir, `git-${sid}.json`) : null
+  const cacheFile = cacheDir ? join(cacheDir, gitCacheName(sid)) : null
   if (cacheFile) {
     try {
       const cached = JSON.parse(readFileSync(cacheFile, 'utf8'))
