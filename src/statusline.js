@@ -6,27 +6,11 @@
 // Claude's UI.
 import { render } from './render.js'
 import { collectGit } from './git.js'
+import { loadConfig } from './config.js'
 import { tmpdir } from 'node:os'
 
-// TEMPORARY (Task 10 ordering caveat): inline default config + no config-file
-// read until config.js (Task 12) and paths.js (Task 13) land, at which point
-// these are replaced by `loadConfig(readConfigFile())`.
-const DEFAULT_CONFIG = {
-  version: 1,
-  preset: 'standard',
-  layout: 'auto',
-  maxRows: 3,
-  glyphs: 'emoji',
-  colors: true,
-  icons: true,
-  segments: [
-    { id: 'repo', enabled: true },
-    { id: 'context', enabled: true },
-    { id: 'duration', enabled: true },
-    { id: 'model', enabled: true },
-  ],
-}
-
+// TEMPORARY (until Task 13): no config-file read yet, so load defaults. Task 13
+// swaps this for `loadConfig(readConfigFile())` once paths.js lands.
 function readStdin() {
   return new Promise((resolve) => {
     let data = ''
@@ -43,8 +27,9 @@ try {
   const input = JSON.parse(raw || '{}')
   input.now = Date.now() // injected so rate-limit countdowns tick each render
   input.git = collectGit(input, { cacheDir: tmpdir(), sessionId: input.session_id })
+  const config = loadConfig(null) // Task 13: loadConfig(readConfigFile())
   const columns = Number(process.env.COLUMNS) || 80 // captured output → no TTY; read COLUMNS
-  process.stdout.write(render(input, DEFAULT_CONFIG, { columns }))
+  process.stdout.write(render(input, config, { columns }))
 } catch {
   // Never crash Claude's UI on any failure — emit nothing.
   process.stdout.write('')
