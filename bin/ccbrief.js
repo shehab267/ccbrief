@@ -3,7 +3,8 @@
 import { createInterface } from 'node:readline/promises'
 import { runInit } from '../src/commands/init.js'
 import { runUninstall } from '../src/commands/uninstall.js'
-import { configDir } from '../src/paths.js'
+import { runConfigTui } from '../src/tui/index.js'
+import { configDir, ccbriefDir, readConfigFile } from '../src/paths.js'
 
 const [cmd] = process.argv.slice(2)
 
@@ -39,7 +40,7 @@ switch (cmd) {
     break
   }
   case 'config':
-    console.log(`ccbrief: "${cmd}" is not implemented yet.`)
+    await runConfigTui({ dir: ccbriefDir(), initialConfig: readConfigFile() })
     break
   case '--version':
   case '-v':
