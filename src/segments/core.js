@@ -1,0 +1,17 @@
+// Core segments. Each segment is a pure { id, section, isAvailable, format } object.
+// `repo` (Task 5) and `context` (Task 6) are appended to this file as they land.
+const basename = (p) => String(p ?? '').split(/[\\/]/).filter(Boolean).pop() ?? ''
+
+export const directory = {
+  id: 'directory',
+  section: 'core',
+  isAvailable: (input) => Boolean(input?.workspace?.current_dir),
+  format: (input) => basename(input.workspace.current_dir),
+}
+
+export const model = {
+  id: 'model',
+  section: 'core',
+  isAvailable: (input) => Boolean(input?.model?.display_name),
+  format: (input) => input.model.display_name,
+}
