@@ -15,3 +15,17 @@ export const model = {
   isAvailable: (input) => Boolean(input?.model?.display_name),
   format: (input) => input.model.display_name,
 }
+
+export const repo = {
+  id: 'repo',
+  section: 'core',
+  isAvailable: (input) => Boolean(input?.git),
+  format: (input, theme) => {
+    const name = input.workspace?.repo?.name ?? basename(input.workspace?.current_dir)
+    const { branch, added, removed } = input.git
+    const glyph = theme.glyph('branch')
+    const head = `${glyph ? glyph + ' ' : ''}${name}/${branch}`
+    if (!added && !removed) return head
+    return `${head} ${theme.color('green', `+${added}`)}/${theme.color('red', `-${removed}`)}`
+  },
+}
