@@ -14,7 +14,7 @@ import { ccbriefDir } from '../paths.js'
 export const PREVIEW_INPUT = {
   now: 0, workspace: { current_dir: '/home/dev/ccbrief', repo: { name: 'ccbrief' } },
   git: { branch: 'main', added: 3, removed: 1 }, model: { display_name: 'Opus' },
-  context_window: { used_percentage: 42, remaining_percentage: 58, current_usage: { input_tokens: 128_000 } },
+  context_window: { used_percentage: 42, remaining_percentage: 58, total_input_tokens: 116_000, total_output_tokens: 12_000, current_usage: { input_tokens: 128_000 } },
   cost: { total_duration_ms: 5_040_000, total_cost_usd: 1.23, total_lines_added: 120, total_lines_removed: 34 },
   effort: { level: 'high' },
 }

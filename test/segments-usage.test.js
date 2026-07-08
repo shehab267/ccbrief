@@ -8,8 +8,8 @@ const show = (id, input) => (BY_ID[id].isAvailable(input) ? BY_ID[id].format(inp
 const NOW = 1_760_000_000_000
 
 const rows = [
-  ['tokens sum', 'tokens', { context_window: { current_usage: { input_tokens: 90_000, output_tokens: 12_000, cache_read_input_tokens: 26_000 } } }, '128k'],
-  ['tokens hidden post-compact', 'tokens', { context_window: { current_usage: null } }, null],
+  ['tokens = total_input + total_output', 'tokens', { context_window: { total_input_tokens: 116_000, total_output_tokens: 12_000 } }, '128k'],
+  ['tokens hidden when totals absent', 'tokens', { context_window: { total_input_tokens: null, total_output_tokens: null } }, null],
   ['remaining', 'remaining', { context_window: { remaining_percentage: 58 } }, '58% left'],
   ['remaining hidden', 'remaining', { context_window: { remaining_percentage: null } }, null],
   ['duration', 'duration', { cost: { total_duration_ms: 5_040_000 } }, '1h 24m'],

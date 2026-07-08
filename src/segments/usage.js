@@ -1,11 +1,17 @@
 // Usage segments: token counts, remaining %, duration, cost, and the Pro/Max
 // rate-limit windows. Each hides when its source field is null/absent.
-import { formatDuration, formatCountdown, formatTokens, sumTokens } from '../format.js'
+import { formatDuration, formatCountdown, formatTokens } from '../format.js'
 
 export const tokens = {
   id: 'tokens', section: 'usage',
-  isAvailable: (input) => input?.context_window?.current_usage != null,
-  format: (input) => formatTokens(sumTokens(input.context_window.current_usage)),
+  // Current tokens in context = total_input + total_output (the canonical
+  // context counts). Null before the first API call / post-/compact → hide.
+  isAvailable: (input) =>
+    input?.context_window?.total_input_tokens != null || input?.context_window?.total_output_tokens != null,
+  format: (input) => {
+    const cw = input.context_window
+    return formatTokens((Number(cw.total_input_tokens) || 0) + (Number(cw.total_output_tokens) || 0))
+  },
 }
 
 export const remaining = {

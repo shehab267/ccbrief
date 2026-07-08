@@ -36,7 +36,3 @@ export function formatCountdown(ms) {
 export function formatTokens(n) {
   return n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`
 }
-
-export function sumTokens(usage) {
-  return Object.values(usage ?? {}).reduce((a, v) => a + (Number(v) || 0), 0)
-}

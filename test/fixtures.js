@@ -11,6 +11,8 @@ export const standard = {
   context_window: {
     used_percentage: 42,
     remaining_percentage: 58,
+    total_input_tokens: 116_000,
+    total_output_tokens: 12_000,
     current_usage: { input_tokens: 90_000, output_tokens: 12_000, cache_read_input_tokens: 26_000 },
   },
   cost: { total_duration_ms: 5_040_000, total_cost_usd: 1.23, total_lines_added: 120, total_lines_removed: 34 },
@@ -57,7 +59,7 @@ export const proMax = {
   workspace: { current_dir: '/home/dev/ccbrief', repo: { name: 'ccbrief' } },
   git: { branch: 'feat/layout', added: 8, removed: 2 },
   model: { display_name: 'Opus' },
-  context_window: { used_percentage: 73, remaining_percentage: 27, current_usage: { input_tokens: 150_000, output_tokens: 20_000 } },
+  context_window: { used_percentage: 73, remaining_percentage: 27, total_input_tokens: 150_000, total_output_tokens: 20_000, current_usage: { input_tokens: 150_000, output_tokens: 20_000 } },
   cost: { total_duration_ms: 9_000_000, total_cost_usd: 4.56 },
   rate_limits: {
     // resets_at is Unix epoch SECONDS per the official contract (not ms).
