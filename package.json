@@ -4,7 +4,7 @@
   "description": "A minimal, configurable status line for Claude Code.",
   "type": "module",
   "bin": {
-    "ccbrief": "./bin/ccbrief.js"
+    "ccbrief": "bin/ccbrief.js"
   },
   "files": [
     "bin",
