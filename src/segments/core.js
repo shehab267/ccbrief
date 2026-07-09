@@ -14,7 +14,10 @@ export const model = {
   id: 'model',
   section: 'core',
   isAvailable: (input) => Boolean(input?.model?.display_name),
-  format: (input) => clean(input.model.display_name),
+  format: (input, theme) => {
+    const glyph = theme.glyph('model')
+    return `${glyph ? glyph + ' ' : ''}${clean(input.model.display_name)}`
+  },
 }
 
 export const repo = {

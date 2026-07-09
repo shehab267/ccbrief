@@ -12,7 +12,7 @@ Node process that turns the session JSON Claude Code hands it into a tidy, color
 > that reads the data Claude Code already exposes. It makes no network calls and collects no telemetry.
 
 ```
-🌿 ccbrief/main +3/-1 │ 42% ━━━━───── │ ⏱ 1h 24m │ Opus
+🌿 ccbrief/main +3/-1 │ 42% ━━━━───── │ ⏱ 1h 24m │ 🧠 Opus
 ```
 
 <sub>Examples in this README are shown without color; in your terminal the context bar, git diff, and
@@ -50,20 +50,20 @@ fewer segments rather than fake zeros.
 **Minimal** — repo · context · model
 
 ```
-🌿 ccbrief/main +3/-1 │ 42% ━━━━───── │ Opus
+🌿 ccbrief/main +3/-1 │ 42% ━━━━───── │ 🧠 Opus
 ```
 
 **Standard** _(default)_ — repo · context · duration · model
 
 ```
-🌿 ccbrief/main +3/-1 │ 42% ━━━━───── │ ⏱ 1h 24m │ Opus
+🌿 ccbrief/main +3/-1 │ 42% ━━━━───── │ ⏱ 1h 24m │ 🧠 Opus
 ```
 
 **Detailed** — directory · repo · lines · context · tokens · duration · cost · rate limits · effort · model
 
 ```
 ccbrief │ 🌿 ccbrief/feat/layout +8/-2 │ 73% ━━━━━━━── │ 170k │ ⏱ 2h 30m │ $4.56 │ 5h 40% · 2h 0m
-7d 12% · reset due │ ⚡ high │ Opus
+7d 12% · reset due │ ⚡ high │ 🧠 Opus
 ```
 
 When a line is too wide for your terminal, ccbrief packs complete segments across up to three rows
@@ -72,7 +72,7 @@ When a line is too wide for your terminal, ccbrief packs complete segments acros
 ```
 ccbrief │ 🌿 ccbrief/feat/layout +8/-2 │ 73% ━━━━━━━──
 170k │ ⏱ 2h 30m │ $4.56 │ 5h 40% · 2h 0m
-7d 12% · reset due │ ⚡ high │ Opus
+7d 12% · reset due │ ⚡ high │ 🧠 Opus
 ```
 
 ---
@@ -139,7 +139,7 @@ Every segment hides automatically when its source field is absent, so you only e
 | `directory` | Current directory name | No workspace directory |
 | `repo` | Repo/branch + staged diff (`+3/-1`) | Not in a git repo |
 | `context` | Context window used %, with a bar | Null early in a session / after `/compact` |
-| `model` | Active model name | Absent |
+| `model` | Active model name (`🧠 Opus 4.8`) | Absent |
 
 ### Usage
 
@@ -165,7 +165,7 @@ Every segment hides automatically when its source field is absent, so you only e
 | Segment | Shows | Hidden when |
 |---------|-------|-------------|
 | `effort` | Reasoning effort level (`⚡ high`) | Absent |
-| `thinking` | Thinking indicator (`🧠 thinking`) | Thinking not enabled |
+| `thinking` | Thinking indicator (`💭 thinking`) | Thinking not enabled |
 | `outputStyle` | Output style name (`concise`) | Absent |
 | `agent` | Active subagent name | No active subagent |
 

@@ -22,6 +22,12 @@ test('emoji branch glyph', () => {
   assert.equal(t.glyph('branch'), '🌿')
 })
 
+test('emoji model glyph is distinct from thinking', () => {
+  const t = makeTheme({ glyphs: 'emoji', colors: false, icons: true })
+  assert.equal(t.glyph('model'), '🧠')
+  assert.equal(t.glyph('thinking'), '💭')
+})
+
 test('bar(42) is 4 filled + 5 empty in emoji mode', () => {
   const t = makeTheme({ glyphs: 'emoji', colors: false, icons: true })
   assert.equal(t.bar(42, 9), '━━━━─────')

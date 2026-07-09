@@ -3,10 +3,13 @@
 
 const SGR = { dim: 2, red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, cyan: 36 }
 
+// `model` gets 🧠 and `thinking` the thought balloon: thinking.enabled is a
+// near-always-true boolean on current models, so the brain reads better on the
+// segment that actually names which model you're talking to.
 const GLYPHS = {
-  emoji:       { branch: '🌿', duration: '⏱', cost: '💰', effort: '⚡', thinking: '🧠', pr: '🔎', worktree: '🌲' },
-  'nerd-font': { branch: '', duration: '', cost: '', effort: '', thinking: '', pr: '', worktree: '' },
-  ascii:       { branch: '', duration: '', cost: '', effort: '', thinking: '', pr: '', worktree: '' },
+  emoji:       { branch: '🌿', duration: '⏱', cost: '💰', effort: '⚡', model: '🧠', thinking: '💭', pr: '🔎', worktree: '🌲' },
+  'nerd-font': { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '' },
+  ascii:       { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '' },
 }
 
 const BAR = {
