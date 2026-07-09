@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 
 # Internal planning / design specs — kept local, not published
 docs/
+
+# Build output (bundled at publish time via esbuild)
+dist/

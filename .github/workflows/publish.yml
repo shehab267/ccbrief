@@ -1,0 +1,37 @@
+name: Publish
+
+# Manual trigger only: no publish happens until you deliberately run this workflow
+# from the Actions tab. Matches the release order — publish via OIDC, then tag, then
+# cut the GitHub Release. Switch to `on: release: types: [published]` later if you
+# want release-triggered publishing.
+on:
+  workflow_dispatch:
+
+# One publish at a time.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # required for npm Trusted Publishing (OIDC) + auto-provenance
+
+jobs:
+  publish:
+    name: publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22 # latest 22.x is >= 22.14, the floor for trusted publishing
+          registry-url: https://registry.npmjs.org
+      # Node 22 ships npm 10, but Trusted Publishing needs npm >= 11.5.1.
+      - run: npm i -g npm@latest
+      - run: npm ci
+      # Fail before touching the registry if tests break or the files allowlist is wrong.
+      - run: npm test
+      - run: npm pack --dry-run
+      # No NODE_AUTH_TOKEN: OIDC authenticates the runner and provenance is generated
+      # automatically. Requires a trusted publisher configured for this package on npmjs.com.
+      - run: npm publish
