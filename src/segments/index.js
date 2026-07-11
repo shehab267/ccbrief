@@ -2,6 +2,7 @@
 // New segments are inserted into SEGMENTS in display order.
 import { directory, repo, context, model } from './core.js'
 import { tokens, remaining, duration, cost, fiveHour, weekly } from './usage.js'
+export { LIMIT_DEFAULTS } from './usage.js'
 import { lines, pr, worktree } from './development.js'
 import { effort, thinking, outputStyle, agent } from './claude.js'
 

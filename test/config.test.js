@@ -22,9 +22,32 @@ test('custom keeps provided segments, drops unknown ids', () => {
   assert.deepEqual(c.segments.map((s) => s.id), ['model'])
 })
 test('refreshIntervalFor', () => {
-  assert.equal(refreshIntervalFor(loadConfig({ preset: 'standard' })), 60) // has duration
+  assert.equal(refreshIntervalFor(loadConfig({ preset: 'standard' })), 60) // has fiveHour (time-based)
   assert.equal(refreshIntervalFor(loadConfig({ preset: 'minimal' })), undefined)
 })
 test('DEFAULT_CONFIG is the standard preset', () => {
   assert.equal(DEFAULT_CONFIG.preset, 'standard')
+})
+
+// Rate-limit windows carry two independent toggles; presets inject their
+// defaults, custom configs round-trip valid values and drop everything unknown.
+test('preset injects fiveHour toggle defaults (time-only)', () => {
+  const fh = loadConfig({ preset: 'standard' }).segments.find((s) => s.id === 'fiveHour')
+  assert.deepEqual(fh, { id: 'fiveHour', enabled: true, showTime: true, showPercent: false })
+})
+test('detailed preset injects weekly toggle defaults (time + percent)', () => {
+  const wk = loadConfig({ preset: 'detailed' }).segments.find((s) => s.id === 'weekly')
+  assert.deepEqual(wk, { id: 'weekly', enabled: true, showTime: true, showPercent: true })
+})
+test('non-limit segments never carry toggle keys', () => {
+  const repo = loadConfig({ preset: 'standard' }).segments.find((s) => s.id === 'repo')
+  assert.deepEqual(repo, { id: 'repo', enabled: true })
+})
+test('custom preserves showTime/showPercent and drops unknown keys', () => {
+  const c = loadConfig({ preset: 'custom', segments: [{ id: 'fiveHour', enabled: true, showTime: false, showPercent: true, bogus: 1 }] })
+  assert.deepEqual(c.segments[0], { id: 'fiveHour', enabled: true, showTime: false, showPercent: true })
+})
+test('custom fills toggle defaults when omitted', () => {
+  const c = loadConfig({ preset: 'custom', segments: [{ id: 'weekly', enabled: true }] })
+  assert.deepEqual(c.segments[0], { id: 'weekly', enabled: true, showTime: true, showPercent: true })
 })

@@ -7,7 +7,7 @@ export const directory = {
   id: 'directory',
   section: 'core',
   isAvailable: (input) => Boolean(input?.workspace?.current_dir),
-  format: (input) => clean(basename(input.workspace.current_dir)),
+  format: (input, theme) => theme.primary(clean(basename(input.workspace.current_dir))),
 }
 
 export const model = {
@@ -16,7 +16,7 @@ export const model = {
   isAvailable: (input) => Boolean(input?.model?.display_name),
   format: (input, theme) => {
     const glyph = theme.glyph('model')
-    return `${glyph ? glyph + ' ' : ''}${clean(input.model.display_name)}`
+    return `${glyph ? glyph + ' ' : ''}${theme.primary(clean(input.model.display_name))}`
   },
 }
 
@@ -29,7 +29,7 @@ export const repo = {
     const branch = clean(input.git.branch)
     const { added, removed } = input.git
     const glyph = theme.glyph('branch')
-    const head = `${glyph ? glyph + ' ' : ''}${name}/${branch}`
+    const head = `${glyph ? glyph + ' ' : ''}${theme.primary(`${name}/${branch}`)}`
     if (!added && !removed) return head
     return `${head} ${theme.color('green', `+${added}`)}/${theme.color('red', `-${removed}`)}`
   },
@@ -43,7 +43,9 @@ export const context = {
   isAvailable: (input) => input?.context_window?.used_percentage != null,
   format: (input, theme) => {
     const pct = Math.round(input.context_window.used_percentage)
+    // Same tone drives the number AND the bar fill so the whole segment reads
+    // as one gauge: green plenty → yellow filling → red nearly full.
     const tone = pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green'
-    return `${theme.color(tone, `${pct}%`)} ${theme.bar(pct)}`
+    return `${theme.color(tone, `${pct}%`)} ${theme.bar(pct, 9, tone)}`
   },
 }

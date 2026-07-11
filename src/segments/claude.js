@@ -5,23 +5,23 @@ import { clean } from '../format.js'
 export const effort = {
   id: 'effort', section: 'claude',
   isAvailable: (input) => Boolean(input?.effort?.level),
-  format: (input, theme) => `${theme.glyph('effort') ? theme.glyph('effort') + ' ' : ''}${clean(input.effort.level)}`,
+  format: (input, theme) => `${theme.glyph('effort') ? theme.glyph('effort') + ' ' : ''}${theme.primary(clean(input.effort.level))}`,
 }
 
 export const thinking = {
   id: 'thinking', section: 'claude',
   isAvailable: (input) => input?.thinking?.enabled === true,
-  format: (input, theme) => `${theme.glyph('thinking') ? theme.glyph('thinking') + ' ' : ''}thinking`,
+  format: (input, theme) => `${theme.glyph('thinking') ? theme.glyph('thinking') + ' ' : ''}${theme.primary('thinking')}`,
 }
 
 export const outputStyle = {
   id: 'outputStyle', section: 'claude',
   isAvailable: (input) => Boolean(input?.output_style?.name),
-  format: (input) => clean(input.output_style.name),
+  format: (input, theme) => theme.primary(clean(input.output_style.name)),
 }
 
 export const agent = {
   id: 'agent', section: 'claude',
   isAvailable: (input) => Boolean(input?.agent?.name),
-  format: (input) => clean(input.agent.name),
+  format: (input, theme) => theme.primary(clean(input.agent.name)),
 }

@@ -7,9 +7,46 @@ test('colors off → no ANSI', () => {
   assert.equal(t.color('green', 'ok'), 'ok')
 })
 
-test('colors on → wraps in SGR', () => {
+test('colors on → wraps in bright SGR', () => {
   const t = makeTheme({ glyphs: 'emoji', colors: true, icons: true })
-  assert.equal(t.color('green', 'ok'), '\x1b[32mok\x1b[0m')
+  // bright green (92), not the muddy standard green (32)
+  assert.equal(t.color('green', 'ok'), '\x1b[92mok\x1b[0m')
+})
+
+// Identity text is toned to grey with `dim` — adaptive, so it softens the
+// terminal's glaring default white without hardcoding a foreground that would
+// invert on a light background. Colours-off leaves it untouched.
+test('primary tones identity to adaptive grey (dim), untouched when off', () => {
+  assert.equal(makeTheme({ colors: true }).primary('dir'), '\x1b[2mdir\x1b[0m')
+  assert.equal(makeTheme({ colors: false }).primary('dir'), 'dir')
+})
+
+test('secondary recedes to dim when colors on, untouched when off', () => {
+  assert.equal(makeTheme({ colors: true }).secondary('72k'), '\x1b[2m72k\x1b[0m')
+  assert.equal(makeTheme({ colors: false }).secondary('72k'), '72k')
+})
+
+test('orange is a 256-color code', () => {
+  assert.equal(makeTheme({ colors: true }).color('orange', 'x'), '\x1b[38;5;208mx\x1b[0m')
+})
+
+test('bar with a tone → colored fill + dimmed empty', () => {
+  const t = makeTheme({ glyphs: 'emoji', colors: true })
+  // 33% of 9 = 3 filled; fill takes the tone, remainder is dimmed
+  assert.equal(t.bar(33, 9, 'green'), '\x1b[92m━━━\x1b[0m\x1b[2m──────\x1b[0m')
+})
+
+test('bar without a tone stays plain (snapshot/ascii safe)', () => {
+  assert.equal(makeTheme({ colors: true }).bar(42, 9), '━━━━─────')
+})
+
+test('separators are dimmed when colors are on, plain when off', () => {
+  assert.equal(makeTheme({ colors: true }).sep, '\x1b[2m │ \x1b[0m')
+  assert.equal(makeTheme({ colors: false }).sep, ' │ ')
+})
+
+test('emoji reset glyph is a colorable sand-timer', () => {
+  assert.equal(makeTheme({ glyphs: 'emoji', colors: false, icons: true }).glyph('reset'), '⧗')
 })
 
 test('icons off → glyph is empty', () => {

@@ -9,6 +9,9 @@ test('formatDuration', () => {
 })
 test('formatCountdown', () => {
   assert.equal(formatCountdown(2 * 3_600_000), '2h 0m')
+  assert.equal(formatCountdown(45 * 60_000), '45m')
+  // Weekly windows are days out: use a day unit, not `76h 0m`.
+  assert.equal(formatCountdown((3 * 24 + 4) * 3_600_000), '3d 4h')
   assert.equal(formatCountdown(-1), 'reset due')
   assert.equal(formatCountdown(0), 'reset due')
 })

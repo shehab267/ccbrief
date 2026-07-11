@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { render } from '../render.js'
 import { initialState, reduce, stateToConfig } from './state.js'
 import { refreshIntervalFor, loadConfig } from '../config.js'
+import { LIMIT_DEFAULTS } from '../segments/index.js'
 import { ccbriefDir } from '../paths.js'
 
 // Fixed dummy data — never real repo/session info. Mirrors test/fixtures.standard
@@ -17,11 +18,23 @@ export const PREVIEW_INPUT = {
   context_window: { used_percentage: 42, remaining_percentage: 58, total_input_tokens: 116_000, total_output_tokens: 12_000, current_usage: { input_tokens: 128_000 } },
   cost: { total_duration_ms: 5_040_000, total_cost_usd: 1.23, total_lines_added: 120, total_lines_removed: 34 },
   effort: { level: 'high' },
+  // resets_at is Unix epoch SECONDS; PREVIEW_INPUT.now is 0, so these are the
+  // seconds-until-reset directly. Present so the preview shows the rate-limit
+  // windows (standard now leads with fiveHour; detailed adds weekly).
+  rate_limits: {
+    five_hour: { used_percentage: 40, resets_at: 2 * 3600 },            // 2h out
+    seven_day: { used_percentage: 62, resets_at: (3 * 24 + 4) * 3600 }, // ~3d 4h out
+  },
 }
 
 export function renderPanel(state, ctx = { columns: 80 }) {
   const preview = render(PREVIEW_INPUT, stateToConfig(state), ctx)
   const enabled = state.segments.filter((s) => s.enabled).map((s) => s.id).join(', ')
+  // The per-window time/pct toggles only act on a focused limit row (fiveHour /
+  // weekly), so surface their hint only then — advertising a key that does
+  // nothing on every other row is the UX smell we're removing. Two self-mapping
+  // tokens (`[t] time` / `[%] pct`) beat the old crammed `[t/%] limit time/pct`.
+  const limitHint = LIMIT_DEFAULTS[ctx.focusedId] ? '  [t] time  [%] pct' : ''
   return [
     `ccbrief · configuration                 preset: ${state.preset}`,
     `segments: ${enabled}`,
@@ -29,8 +42,28 @@ export function renderPanel(state, ctx = { columns: 80 }) {
     `Preview ${'─'.repeat(Math.max(0, ctx.columns - 8))}`,
     ` ${preview}`,
     '─'.repeat(ctx.columns),
-    '[space] toggle  [↑↓] move cursor  [</>] reorder  [p] preset  [g] glyphs  [c] colors  [i] icons  [l] layout  [s] save  [q] quit',
+    `[space] toggle  [↑↓] move  [←→] reorder${limitHint}  [p] preset  [g] glyphs  [c] colors  [i] icons  [l] layout  [s] save  [q] quit`,
   ].join('\n')
+}
+
+// The segment list with the cursor and, for limit windows, their two toggle
+// states as filled/empty dots. On the FOCUSED limit row each dot also carries
+// the key that flips it (`[t]` beside time, `[%]` beside pct) — the toggle
+// button shown at the point of action. Non-focused rows stay quiet (just dots),
+// so the affordance never clutters rows you aren't editing. Pure (paint() is the
+// only caller) so the focus-dependent markup is unit-testable.
+export function renderMarks(state, cursor) {
+  const dot = (on) => (on ? '●' : '○')
+  return state.segments
+    .map((s, i) => {
+      const focused = i === cursor
+      const opt = LIMIT_DEFAULTS[s.id]
+        ? `  time ${dot(s.showTime)}${focused ? ' [t]' : ''}  pct ${dot(s.showPercent)}${focused ? ' [%]' : ''}`
+        : ''
+      const id = LIMIT_DEFAULTS[s.id] ? s.id.padEnd(9) : s.id
+      return `${focused ? '▸' : ' '} ${s.enabled ? '[x]' : '[ ]'} ${id}${opt}`
+    })
+    .join('\n')
 }
 
 export function saveConfig(state, dir = ccbriefDir()) {
@@ -52,10 +85,10 @@ export async function runConfigTui({ dir = ccbriefDir(), initialConfig } = {}) {
   const columns = Number(process.env.COLUMNS) || 80
 
   const paint = () => {
-    const marks = state.segments
-      .map((s, i) => `${i === cursor ? '▸' : ' '} ${s.enabled ? '[x]' : '[ ]'} ${s.id}`)
-      .join('\n')
-    process.stdout.write('\x1b[2J\x1b[H' + renderPanel(state, { columns }) + '\n\n' + marks + '\n')
+    const focusedId = state.segments[cursor]?.id
+    process.stdout.write(
+      '\x1b[2J\x1b[H' + renderPanel(state, { columns, focusedId }) + '\n\n' + renderMarks(state, cursor) + '\n',
+    )
   }
   paint()
 
@@ -74,8 +107,10 @@ export async function runConfigTui({ dir = ccbriefDir(), initialConfig } = {}) {
         case '\x1b[A': cursor = Math.max(0, cursor - 1); break                 // ↑
         case '\x1b[B': cursor = Math.min(state.segments.length - 1, cursor + 1); break // ↓
         case ' ': if (id) state = reduce(state, { type: 'toggle', id }); break // toggle
-        case '<': if (id && cursor > 0) { state = reduce(state, { type: 'move', id, dir: -1 }); cursor-- } break
-        case '>': if (id && cursor < state.segments.length - 1) { state = reduce(state, { type: 'move', id, dir: 1 }); cursor++ } break
+        case '\x1b[D': if (id && cursor > 0) { state = reduce(state, { type: 'move', id, dir: -1 }); cursor-- } break // ← reorder earlier
+        case '\x1b[C': if (id && cursor < state.segments.length - 1) { state = reduce(state, { type: 'move', id, dir: 1 }); cursor++ } break // → reorder later
+        case 't': if (!id || !LIMIT_DEFAULTS[id]) return; state = reduce(state, { type: 'setOption', id, key: 'showTime', value: !state.segments[cursor].showTime }); break
+        case '%': if (!id || !LIMIT_DEFAULTS[id]) return; state = reduce(state, { type: 'setOption', id, key: 'showPercent', value: !state.segments[cursor].showPercent }); break
         case 'p': state = reduce(state, { type: 'preset', preset: next(PRESET_CYCLE, state.preset) }); cursor = 0; break
         case 'g': state = reduce(state, { type: 'set', key: 'glyphs', value: next(GLYPH_CYCLE, state.glyphs) }); break
         case 'c': state = reduce(state, { type: 'set', key: 'colors', value: !state.colors }); break
