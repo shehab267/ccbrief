@@ -12,11 +12,11 @@ Node process that turns the session JSON Claude Code hands it into a tidy, color
 > that reads the data Claude Code already exposes. It makes no network calls and collects no telemetry.
 
 ```
-🌿 ccbrief/main +3/-1 │ 42% ━━━━───── │ ⏱ 1h 24m │ 🧠 Opus
+ccbrief/main │ 42% ━━━━───── │ ⧗ 2h 0m │ Opus
 ```
 
-<sub>Examples in this README are shown without color; in your terminal the context bar, git diff, and
-rate-limit warnings are color-coded.</sub>
+<sub>Examples in this README use the default `simple` glyph mode and are shown without color; in your
+terminal the context bar, git diff, and rate-limit warnings are color-coded.</sub>
 
 ---
 
@@ -47,32 +47,29 @@ Pick a preset in the config TUI, or set `"preset"` in the config file. Every pre
 whose data isn't available yet** — so early in a session, or right after `/compact`, you'll simply see
 fewer segments rather than fake zeros.
 
-**Minimal** — repo · context · model
+**Detailed** _(default)_ — directory · repo · lines · context · tokens · cost · 5-hour limit · weekly limit ·
+effort · model
 
 ```
-🌿 ccbrief/main +3/-1 │ 42% ━━━━───── │ 🧠 Opus
+ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │ wk 3d 4h · 62% │ high
+Opus
 ```
 
-**Standard** _(default)_ — repo · context · duration · model
+A fresh install starts here on purpose: everything is on screen, and turning a segment **off** in the
+TUI is one keypress. Trimming what you can see beats discovering what you can't.
+
+**Standard** — repo · context · 5-hour limit · model
 
 ```
-🌿 ccbrief/main +3/-1 │ 42% ━━━━───── │ ⏱ 1h 24m │ 🧠 Opus
-```
-
-**Detailed** — directory · repo · lines · context · tokens · duration · cost · rate limits · effort · model
-
-```
-ccbrief │ 🌿 ccbrief/feat/layout +8/-2 │ 73% ━━━━━━━── │ 170k │ ⏱ 2h 30m │ $4.56 │ 5h 40% · 2h 0m
-7d 12% · reset due │ ⚡ high │ 🧠 Opus
+ccbrief/main │ 42% ━━━━───── │ ⧗ 2h 0m │ Opus
 ```
 
 When a line is too wide for your terminal, ccbrief packs complete segments across up to three rows
 (it never splits a segment). Narrow the window and the Detailed line above simply reflows:
 
 ```
-ccbrief │ 🌿 ccbrief/feat/layout +8/-2 │ 73% ━━━━━━━──
-170k │ ⏱ 2h 30m │ $4.56 │ 5h 40% · 2h 0m
-7d 12% · reset due │ ⚡ high │ 🧠 Opus
+ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k
+$1.23 │ ⧗ 2h 0m │ wk 3d 4h · 62% │ high │ Opus
 ```
 
 ---
@@ -89,7 +86,8 @@ ccbrief │ 🌿 ccbrief/feat/layout +8/-2 │ 73% ━━━━━━━──
   explicitly run `npx ccbrief init`.
 - **Cross-platform.** macOS, Linux, WSL, and Windows are all first-class.
 - **Clickable PRs.** The PR segment links to the pull request via terminal hyperlinks (OSC 8).
-- **Swappable glyphs.** Emoji icons (default) or a pure-ASCII fallback.
+- **Swappable glyphs.** Four modes — `simple` (the default: text and universal symbols, identical on
+  every terminal), `emoji`, `nerd-font`, and a pure-ASCII fallback.
 
 ---
 
@@ -101,29 +99,45 @@ Open the interactive TUI to toggle segments, reorder them, switch presets, and p
 npx ccbrief config
 ```
 
+| Key | Does |
+|-----|------|
+| `space` | turn the focused segment on / off |
+| `↑` `↓` | move between segments |
+| `←` `→` | reorder the focused segment |
+| `p` `g` `c` `i` `l` | cycle preset · glyphs · colors · icons · layout |
+| `↵` or `s` | save and exit |
+| `esc` or `q` | quit without saving |
+
+Saving writes your config **and** re-syncs `settings.json`, so a change takes effect on Claude Code's
+next render — no reinstall. Re-running `npx ccbrief init` never overwrites a config you've tuned.
+
 Settings are stored at `~/.claude/ccbrief/config.json` (override the base directory with the
 `CLAUDE_CONFIG_DIR` environment variable). The file is optional — a missing or malformed config falls
 back to sensible defaults and never breaks the status line.
 
 | Key | Values | Default | What it does |
 |-----|--------|---------|--------------|
-| `preset` | `minimal` · `standard` · `detailed` · `custom` | `standard` | Named segment set. `custom` uses your `segments` list. |
+| `preset` | `standard` · `detailed` · `custom` | `detailed` | Named segment set. `custom` uses your `segments` list. |
 | `layout` | `auto` · `single-line` · `multi-line` | `auto` | How segments are packed into rows. |
 | `maxRows` | `1`–`3` | `3` | Maximum rows the status line may occupy. |
-| `glyphs` | `emoji` · `nerd-font` · `ascii` | `emoji` | Icon style. |
+| `glyphs` | `simple` · `emoji` · `nerd-font` · `ascii` | `simple` | Icon style. |
 | `colors` | `true` · `false` | `true` | ANSI color output. |
 | `icons` | `true` · `false` | `true` | Show segment icons/glyphs. |
 | `segments` | `[{ "id", "enabled" }]` | — | Ordered segment list (used when `preset` is `custom`). |
 
 ### Glyph styles
 
-Emoji (default) shows icons and renders everywhere; `ascii` is a safe, icon-free fallback for
-terminals with limited glyph support. (A `nerd-font` value is also accepted, but currently renders the
-emoji layout — `│` separators and `━`/`─` bar — without icons.)
+`simple` is the default because it's the only mode that looks the same for everyone — text plus
+universal symbols, no font to install. `emoji` adds icons. `nerd-font` uses Nerd Font icons and
+**renders blank boxes without a Nerd Font installed**, so the TUI labels it as such and the live
+preview shows you before you commit. `ascii` drops to pure `|`/`#` for terminals with limited glyph
+support.
 
 ```
-emoji:  ccbrief │ 🌿 ccbrief/feat/layout +8/-2 │ 73% ━━━━━━━── │ 170k │ ⏱ 2h 30m │ $4.56
-ascii:  ccbrief | ccbrief/feat/layout +8/-2 | 73% #######-- | 170k | 2h 30m | $4.56
+simple    : ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │ high │ Opus
+emoji     : ccbrief │ 🌿 ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │ ⚡ high │ 🧠 Opus
+nerd-font : ccbrief │  ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │  high │  Opus
+ascii     : ccbrief | ccbrief/main | +120/-34 | 42% ####----- | 128k | $1.23 | S 2h 0m | high | Opus
 ```
 
 ---
@@ -137,9 +151,9 @@ Every segment hides automatically when its source field is absent, so you only e
 | Segment | Shows | Hidden when |
 |---------|-------|-------------|
 | `directory` | Current directory name | No workspace directory |
-| `repo` | Repo/branch + staged diff (`+3/-1`) | Not in a git repo |
+| `repo` | Repo/branch (`ccbrief/main`); press `d` in the TUI to add the diff (`+3/-1`) | Not in a git repo |
 | `context` | Context window used %, with a bar | Null early in a session / after `/compact` |
-| `model` | Active model name (`🧠 Opus 4.8`) | Absent |
+| `model` | Active model name (`Opus 4.8`) | Absent |
 
 ### Usage
 
@@ -147,10 +161,10 @@ Every segment hides automatically when its source field is absent, so you only e
 |---------|-------|-------------|
 | `tokens` | Tokens in context (e.g. `170k`) | Before the first response / after `/compact` |
 | `remaining` | Context percent remaining (`58% left`) | Null |
-| `duration` | Session wall-clock (`⏱ 1h 24m`) | Absent |
+| `duration` | Session wall-clock (`1h 24m`) | Absent |
 | `cost` | Session cost (`$1.23`) | Absent |
-| `fiveHour` | 5-hour rate-limit window (`5h 40% · 2h 0m`) | Not on Pro/Max |
-| `weekly` | 7-day rate-limit window (`7d 12% · reset due`) | Not on Pro/Max |
+| `fiveHour` | Time until the 5-hour limit resets (`⧗ 2h 0m`); `%` adds usage (`⧗ 2h 0m · 40%`) | Not on Pro/Max |
+| `weekly` | 7-day limit (`wk 3d 4h · 62%`) | Not on Pro/Max |
 
 ### Development
 
@@ -164,8 +178,8 @@ Every segment hides automatically when its source field is absent, so you only e
 
 | Segment | Shows | Hidden when |
 |---------|-------|-------------|
-| `effort` | Reasoning effort level (`⚡ high`) | Absent |
-| `thinking` | Thinking indicator (`💭 thinking`) | Thinking not enabled |
+| `effort` | Reasoning effort level (`high`) | Absent |
+| `thinking` | Thinking indicator (`thinking`) | Thinking not enabled |
 | `outputStyle` | Output style name (`concise`) | Absent |
 | `agent` | Active subagent name | No active subagent |
 

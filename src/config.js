@@ -4,7 +4,6 @@
 import { BY_ID, optionsFor } from './segments/index.js'
 
 export const PRESETS = {
-  minimal: ['repo', 'context', 'model'],
   // standard leads with the 5-hour window instead of the session clock: two
   // clocks side by side was the exact confusion the limits redesign removed, and
   // `duration` stays one keystroke away in the TUI. Pro/Max-first by design — on
@@ -30,15 +29,22 @@ function withOptions(id, src = {}) {
   return entry
 }
 
+// A fresh install shows everything, because subtracting is easier than discovering:
+// the segments you don't want are visible and one keypress from gone, whereas a
+// lean default hides the good stuff behind a config file you may never open.
+// This is also the fallback for any unknown preset — including the removed
+// `minimal` — so "invalid → defaults" stays literally true.
+export const DEFAULT_PRESET = 'detailed'
+
 export const DEFAULT_CONFIG = {
   version: 1,
-  preset: 'standard',
+  preset: DEFAULT_PRESET,
   layout: 'auto',
   maxRows: 3,
   glyphs: 'simple',
   colors: true,
   icons: true,
-  segments: PRESETS.standard.map((id) => withOptions(id)),
+  segments: PRESETS[DEFAULT_PRESET].map((id) => withOptions(id)),
 }
 
 // `simple` is the default and the safe fallback: the only glyph mode identical
@@ -46,7 +52,7 @@ export const DEFAULT_CONFIG = {
 // to something that renders everywhere rather than to emoji (which varies).
 const GLYPHS = new Set(['simple', 'emoji', 'nerd-font', 'ascii'])
 const LAYOUTS = new Set(['auto', 'single-line', 'multi-line'])
-const PRESET_NAMES = new Set(['minimal', 'standard', 'detailed', 'custom'])
+const PRESET_NAMES = new Set([...Object.keys(PRESETS), 'custom'])
 // Segments whose value changes over time → they drive refreshInterval.
 const TIME_BASED = new Set(['duration', 'fiveHour', 'weekly'])
 
@@ -54,7 +60,7 @@ const oneOf = (v, set, fallback) => (set.has(v) ? v : fallback)
 
 export function loadConfig(raw) {
   const r = raw && typeof raw === 'object' ? raw : {}
-  const preset = oneOf(r.preset, PRESET_NAMES, 'standard')
+  const preset = oneOf(r.preset, PRESET_NAMES, DEFAULT_PRESET)
   const glyphs = oneOf(r.glyphs, GLYPHS, 'simple')
   const layout = oneOf(r.layout, LAYOUTS, 'auto')
   const maxRows = Math.min(3, Math.max(1, Number.isFinite(r.maxRows) ? Math.trunc(r.maxRows) : 3))

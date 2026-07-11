@@ -3,8 +3,8 @@
 import { createInterface } from 'node:readline/promises'
 import { runInit } from '../src/commands/init.js'
 import { runUninstall } from '../src/commands/uninstall.js'
-import { runConfigTui } from '../src/tui/index.js'
-import { configDir, ccbriefDir, readConfigFile } from '../src/paths.js'
+import { runConfig } from '../src/commands/config.js'
+import { configDir, readConfigFile } from '../src/paths.js'
 
 const [cmd] = process.argv.slice(2)
 
@@ -40,7 +40,8 @@ switch (cmd) {
     break
   }
   case 'config':
-    await runConfigTui({ dir: ccbriefDir(), initialConfig: readConfigFile() })
+    // Saving re-syncs settings.json too, so a segment change takes effect immediately.
+    await runConfig({ dir: configDir(), initialConfig: readConfigFile() })
     break
   case '--version':
   case '-v':

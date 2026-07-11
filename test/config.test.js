@@ -2,10 +2,10 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { loadConfig, refreshIntervalFor, PRESETS, DEFAULT_CONFIG } from '../src/config.js'
 
-test('null → defaults (standard preset)', () => {
+test('null → defaults (detailed preset)', () => {
   const c = loadConfig(null)
-  assert.equal(c.preset, 'standard')
-  assert.deepEqual(c.segments.map((s) => s.id), PRESETS.standard)
+  assert.equal(c.preset, 'detailed')
+  assert.deepEqual(c.segments.map((s) => s.id), PRESETS.detailed)
 })
 test('default glyph mode is the universal `simple`', () => {
   assert.equal(DEFAULT_CONFIG.glyphs, 'simple')
@@ -18,8 +18,17 @@ test('bad enums fall back', () => {
   assert.equal(c.maxRows, 3)
 })
 test('preset derives the segment list', () => {
-  const c = loadConfig({ preset: 'minimal', segments: [{ id: 'model', enabled: true }] })
-  assert.deepEqual(c.segments.map((s) => s.id), PRESETS.minimal) // preset wins over stray segments
+  const c = loadConfig({ preset: 'standard', segments: [{ id: 'model', enabled: true }] })
+  assert.deepEqual(c.segments.map((s) => s.id), PRESETS.standard) // preset wins over stray segments
+})
+
+// `minimal` was removed. A config still naming it is not an error — it degrades to
+// the default preset, the same forward-compat rule every other unknown value follows.
+test('the removed `minimal` preset degrades to the default', () => {
+  assert.equal(PRESETS.minimal, undefined)
+  const c = loadConfig({ preset: 'minimal' })
+  assert.equal(c.preset, 'detailed')
+  assert.deepEqual(c.segments.map((s) => s.id), PRESETS.detailed)
 })
 test('custom keeps provided segments, drops unknown ids', () => {
   const c = loadConfig({ preset: 'custom', segments: [{ id: 'model', enabled: true }, { id: 'bogus', enabled: true }] })
@@ -27,10 +36,12 @@ test('custom keeps provided segments, drops unknown ids', () => {
 })
 test('refreshIntervalFor', () => {
   assert.equal(refreshIntervalFor(loadConfig({ preset: 'standard' })), 60) // has fiveHour (time-based)
-  assert.equal(refreshIntervalFor(loadConfig({ preset: 'minimal' })), undefined)
+  // no time-based segment enabled → no polling at all
+  assert.equal(refreshIntervalFor(loadConfig({ preset: 'custom', segments: [{ id: 'model', enabled: true }] })), undefined)
 })
-test('DEFAULT_CONFIG is the standard preset', () => {
-  assert.equal(DEFAULT_CONFIG.preset, 'standard')
+test('DEFAULT_CONFIG is the detailed preset', () => {
+  assert.equal(DEFAULT_CONFIG.preset, 'detailed')
+  assert.deepEqual(DEFAULT_CONFIG.segments.map((s) => s.id), PRESETS.detailed)
 })
 
 // Rate-limit windows carry two independent toggles; presets inject their

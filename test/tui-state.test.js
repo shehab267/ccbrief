@@ -18,9 +18,9 @@ test('move reorders', () => {
   assert.deepEqual(s.segments.map((x) => x.id).slice(0, 2), ['context', 'repo'])
 })
 test('preset resets segments', () => {
-  const s = reduce(reduce(s0(), { type: 'toggle', id: 'model' }), { type: 'preset', preset: 'minimal' })
-  assert.deepEqual(s.segments.map((x) => x.id), PRESETS.minimal)
-  assert.equal(s.preset, 'minimal')
+  const s = reduce(reduce(s0(), { type: 'toggle', id: 'model' }), { type: 'preset', preset: 'detailed' })
+  assert.deepEqual(s.segments.map((x) => x.id), PRESETS.detailed)
+  assert.equal(s.preset, 'detailed')
 })
 test('preset injects limit toggle defaults into state', () => {
   const s = reduce(s0(), { type: 'preset', preset: 'detailed' })

@@ -20,9 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   as 0) into up to three rows against `COLUMNS`, never splitting a segment;
   oversized segments are ellipsis-truncated. `auto`, `single-line`, and
   `multi-line` modes.
-- **Configuration** — `minimal`, `standard`, and `detailed` presets plus a
-  `custom` mode; toggles for glyph style, colors, icons, layout, and max rows.
-  A forward-compatible loader falls back to defaults on any invalid field.
+- **Configuration** — `standard` and `detailed` presets plus a `custom` mode;
+  toggles for glyph style, colors, icons, layout, and max rows. A
+  forward-compatible loader falls back to defaults on any invalid field.
 - **CLI** — `ccbrief init` (settings backup + idempotent merge, with confirmation
   before replacing an existing status line), `ccbrief uninstall` (restore the
   backup or strip only the added block), and `ccbrief config` (interactive TUI
@@ -32,6 +32,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   resolution and a forward-slashed, shell-safe `statusLine.command`.
 - **Documentation** — README (install, preset gallery, segment catalog, config
   reference) and SECURITY.md.
+
+### Changed
+- **`detailed` is the default preset**, and the `minimal` preset is gone. A fresh
+  install now shows every segment so it can be trimmed in the TUI, rather than
+  hiding segments behind a config file. A config still naming `minimal` degrades
+  to the default instead of erroring.
+- **`esc` quits the config TUI**, alongside `q`.
+
+### Fixed
+- **`ccbrief init` no longer resets a config you've tuned.** Re-running it kept
+  overwriting `config.json` with the defaults; it now only writes that file when
+  it is missing or unparseable, and derives `refreshInterval` from the config it
+  keeps.
+- **`ccbrief config` now re-syncs `settings.json`.** Saving only wrote
+  `config.json`, so adding or removing a time-based segment left the status line
+  polling at the old rate (or not at all) until the next `init`. It never writes
+  over a `statusLine` it doesn't own.
 
 ### Security
 - No network calls, no telemetry, and no `postinstall` script; the shipped

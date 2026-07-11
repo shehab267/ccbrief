@@ -37,6 +37,14 @@ test('footer keymap never advertises the per-segment toggle keys', () => {
   for (const k of ['[t]', '[%]', '[d]', '[t/%]']) assert.ok(!footer.includes(k))
 })
 
+// Esc is the key people reach for to back out of a TUI, so it quits alongside q —
+// and the footer has to say so, or the key may as well not exist.
+test('footer keymap advertises esc as a way to quit', () => {
+  const state = initialState(loadConfig({ preset: 'detailed', colors: false }))
+  const footer = renderPanel(state, { columns: 160 }).split('\n').at(-1)
+  assert.ok(/\[esc\/q\] quit/.test(footer), footer)
+})
+
 // The toggle keys live in a one-line, plain-language tip that reads as guidance:
 // it names each part, says show/hide, and appears only while an option-bearing
 // row is focused — '' on every other row (and for no focus at all).
