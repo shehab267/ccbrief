@@ -7,9 +7,13 @@ test('null → defaults (standard preset)', () => {
   assert.equal(c.preset, 'standard')
   assert.deepEqual(c.segments.map((s) => s.id), PRESETS.standard)
 })
+test('default glyph mode is the universal `simple`', () => {
+  assert.equal(DEFAULT_CONFIG.glyphs, 'simple')
+  assert.equal(loadConfig({}).glyphs, 'simple')
+})
 test('bad enums fall back', () => {
   const c = loadConfig({ glyphs: 'wingdings', layout: 'diagonal', maxRows: 9 })
-  assert.equal(c.glyphs, 'emoji')
+  assert.equal(c.glyphs, 'simple') // unknown glyph mode degrades to the universal default
   assert.equal(c.layout, 'auto')
   assert.equal(c.maxRows, 3)
 })

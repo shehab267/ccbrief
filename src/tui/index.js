@@ -27,6 +27,17 @@ export const PREVIEW_INPUT = {
   },
 }
 
+// Each glyph mode's portability, surfaced live in the panel so the choice is
+// informed. `nerd-font` renders blank without a Nerd Font installed — the exact
+// trap that silently wiped a user's icons — so it says so. The live preview is
+// the proof; this label is the warning that makes a blank preview make sense.
+const GLYPH_NOTES = {
+  simple: 'same on every terminal',
+  emoji: 'most terminals; look varies',
+  'nerd-font': 'needs a Nerd Font installed',
+  ascii: 'plain text, works everywhere',
+}
+
 export function renderPanel(state, ctx = { columns: 80 }) {
   const preview = render(PREVIEW_INPUT, stateToConfig(state), ctx)
   const enabled = state.segments.filter((s) => s.enabled).map((s) => s.id).join(', ')
@@ -37,7 +48,7 @@ export function renderPanel(state, ctx = { columns: 80 }) {
   return [
     `ccbrief · configuration                 preset: ${state.preset}`,
     `segments: ${enabled}`,
-    `glyphs: ${state.glyphs}   colors: ${state.colors ? 'on' : 'off'}   icons: ${state.icons ? 'on' : 'off'}   layout: ${state.layout}`,
+    `glyphs: ${state.glyphs} (${GLYPH_NOTES[state.glyphs] ?? ''})   colors: ${state.colors ? 'on' : 'off'}   icons: ${state.icons ? 'on' : 'off'}   layout: ${state.layout}`,
     `Preview ${'─'.repeat(Math.max(0, ctx.columns - 8))}`,
     ` ${preview}`,
     '─'.repeat(ctx.columns),
@@ -83,7 +94,7 @@ export function saveConfig(state, dir = ccbriefDir()) {
 }
 
 const PRESET_CYCLE = ['minimal', 'standard', 'detailed', 'custom']
-const GLYPH_CYCLE = ['emoji', 'nerd-font', 'ascii']
+const GLYPH_CYCLE = ['simple', 'emoji', 'nerd-font', 'ascii']
 const LAYOUT_CYCLE = ['auto', 'single-line', 'multi-line']
 const next = (cycle, cur) => cycle[(cycle.indexOf(cur) + 1) % cycle.length]
 

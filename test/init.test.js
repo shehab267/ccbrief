@@ -16,6 +16,9 @@ test('empty dir: writes settings + config, copies renderer', async () => {
   // commandString quotes the path, so the command ends with a closing quote.
   assert.match(settings.statusLine.command, /ccbrief\/statusline\.js"$/)
   assert.ok(existsSync(join(dir, 'ccbrief', 'config.json')))
+  // Marks the install dir as ESM so node doesn't reparse the bundle every render.
+  const pkg = JSON.parse(readFileSync(join(dir, 'ccbrief', 'package.json'), 'utf8'))
+  assert.equal(pkg.type, 'module')
   assert.equal(res.changed, true)
 })
 

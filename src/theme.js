@@ -27,27 +27,34 @@ const SGR = {
   orange: '38;2;239;157;43',
 }
 
-// `model` gets 🧠 and `thinking` the thought balloon: thinking.enabled is a
-// near-always-true boolean on current models, so the brain reads better on the
-// segment that actually names which model you're talking to. `reset` is a
-// monochrome sand-timer (⧗, not the ⏳ emoji) precisely so it can take the
-// urgency color that the reset-countdown segment paints it with.
+// Four glyph modes. `simple` is the DEFAULT and the only one identical for every
+// user: it has NO pictographs (no emoji or Nerd glyph renders the same across
+// fonts) — just text plus the one monochrome symbol every font ships, the ⧗
+// reset timer. `emoji` looks richest but each OS draws its own artwork and width.
+// `nerd-font` renders blank unless a patched Nerd Font is installed. `ascii` is
+// the pure-ASCII floor (no box-drawing at all). `reset` is a sand-timer (⧗, not
+// the ⏳ emoji) so the countdown segment can paint it with its urgency colour.
 const GLYPHS = {
+  simple:      { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⧗' },
   emoji:       { branch: '🌿', duration: '⏱', cost: '💰', effort: '⚡', model: '🧠', thinking: '💭', pr: '🔎', worktree: '🌲', reset: '⧗' },
-  'nerd-font': { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⧗' },
+  // Nerd Font Private-Use code points (Powerline + Font Awesome ranges) — render
+  // ONLY with a Nerd Font installed, else blank; the TUI labels this mode and its
+  // live preview is the real check. Unverifiable here (no Nerd Font on this box).
+  'nerd-font': { branch: '\ue0a0', duration: '\uf017', cost: '\uf155', effort: '\uf0e7', model: '\uf2db', thinking: '\uf075', pr: '\uf002', worktree: '\uf1bb', reset: '⧗' },
   ascii:       { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '' },
 }
 
 const BAR = {
+  simple:      { full: '━', empty: '─' },
   emoji:       { full: '━', empty: '─' },
   'nerd-font': { full: '━', empty: '─' },
   ascii:       { full: '#', empty: '-' },
 }
 
-const SEP = { emoji: ' │ ', 'nerd-font': ' │ ', ascii: ' | ' }
+const SEP = { simple: ' │ ', emoji: ' │ ', 'nerd-font': ' │ ', ascii: ' | ' }
 
-export function makeTheme({ glyphs = 'emoji', colors = true, icons = true } = {}) {
-  const mode = GLYPHS[glyphs] ? glyphs : 'emoji'
+export function makeTheme({ glyphs = 'simple', colors = true, icons = true } = {}) {
+  const mode = GLYPHS[glyphs] ? glyphs : 'simple'
   const bars = BAR[mode]
   const rawSep = SEP[mode]
   return {

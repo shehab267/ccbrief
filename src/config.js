@@ -35,13 +35,16 @@ export const DEFAULT_CONFIG = {
   preset: 'standard',
   layout: 'auto',
   maxRows: 3,
-  glyphs: 'emoji',
+  glyphs: 'simple',
   colors: true,
   icons: true,
   segments: PRESETS.standard.map((id) => withOptions(id)),
 }
 
-const GLYPHS = new Set(['emoji', 'nerd-font', 'ascii'])
+// `simple` is the default and the safe fallback: the only glyph mode identical
+// for every user (text + universal symbols), so an unknown/legacy value degrades
+// to something that renders everywhere rather than to emoji (which varies).
+const GLYPHS = new Set(['simple', 'emoji', 'nerd-font', 'ascii'])
 const LAYOUTS = new Set(['auto', 'single-line', 'multi-line'])
 const PRESET_NAMES = new Set(['minimal', 'standard', 'detailed', 'custom'])
 // Segments whose value changes over time → they drive refreshInterval.
@@ -52,7 +55,7 @@ const oneOf = (v, set, fallback) => (set.has(v) ? v : fallback)
 export function loadConfig(raw) {
   const r = raw && typeof raw === 'object' ? raw : {}
   const preset = oneOf(r.preset, PRESET_NAMES, 'standard')
-  const glyphs = oneOf(r.glyphs, GLYPHS, 'emoji')
+  const glyphs = oneOf(r.glyphs, GLYPHS, 'simple')
   const layout = oneOf(r.layout, LAYOUTS, 'auto')
   const maxRows = Math.min(3, Math.max(1, Number.isFinite(r.maxRows) ? Math.trunc(r.maxRows) : 3))
   const colors = typeof r.colors === 'boolean' ? r.colors : true

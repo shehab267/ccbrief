@@ -44,6 +44,11 @@ export async function runInit({ dir, copyRenderer, confirm, log, now = Date.now 
   if (copyRenderer) copyRenderer(ccbrief)
   else copyFileSync(bundledRenderer(), join(ccbrief, 'statusline.js'))
 
+  // Mark the install dir as ESM. Without it node has no package.json context for
+  // the bundle, logs MODULE_TYPELESS_PACKAGE_JSON, and reparses it as ESM on every
+  // spawn (an every-render cost). This pins it so the reparse never happens.
+  writeFileSync(join(ccbrief, 'package.json'), JSON.stringify({ type: 'module' }, null, 2) + '\n')
+
   const config = loadConfig(DEFAULT_CONFIG)
   const command = commandString(ccbrief)
   const refreshInterval = refreshIntervalFor(config)

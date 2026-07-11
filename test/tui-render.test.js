@@ -20,6 +20,15 @@ test('changing glyph mode changes the preview', () => {
   assert.notEqual(renderPanel(base, { columns: 80 }), renderPanel(ascii, { columns: 80 }))
 })
 
+// Each glyph mode carries a portability note so a choice is informed — the fix
+// for a user landing on nerd-font (no Nerd Font) and silently losing all icons.
+test('panel labels the glyph mode with its portability note', () => {
+  const nerd = initialState(loadConfig({ preset: 'standard', colors: false, glyphs: 'nerd-font' }))
+  assert.ok(renderPanel(nerd, { columns: 120 }).includes('needs a Nerd Font'))
+  const simple = initialState(loadConfig({ preset: 'standard', colors: false, glyphs: 'simple' }))
+  assert.ok(renderPanel(simple, { columns: 120 }).includes('same on every terminal'))
+})
+
 // The keymap footer is static — no toggle keys are crammed into it; they get a
 // dedicated plain-language tip instead. So no `[t]`/`[%]`/`[d]`/`[t/%]` here.
 test('footer keymap never advertises the per-segment toggle keys', () => {

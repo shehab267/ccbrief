@@ -78,3 +78,27 @@ test('ascii mode is pure ASCII', () => {
   // eslint-disable-next-line no-control-regex
   assert.ok(/^[\x00-\x7f]*$/.test(t.glyph('branch') + t.bar(50) + t.sep))
 })
+
+// `simple` is the default: no pictographs (identical everywhere), but keeps the
+// universal ⧗ timer + box-drawing gauge/separator, so it still has structure.
+test('simple mode: no pictographs, keeps ⧗ + box-drawing', () => {
+  const t = makeTheme({ glyphs: 'simple', colors: false, icons: true })
+  for (const n of ['branch', 'effort', 'model', 'duration', 'cost', 'pr', 'worktree']) {
+    assert.equal(t.glyph(n), '', `${n} should have no glyph in simple mode`)
+  }
+  assert.equal(t.glyph('reset'), '⧗')  // the one universal symbol survives
+  assert.equal(t.bar(42, 9), '━━━━─────')
+  assert.match(t.sep, /^ │ $/)
+})
+
+test('simple is the default glyph mode (no glyphs arg → no branch pictograph)', () => {
+  assert.equal(makeTheme({ colors: false, icons: true }).glyph('branch'), '')
+})
+
+// nerd-font is no longer empty: its glyphs are real Nerd-Font Private-Use points
+// (they render only with a Nerd Font installed, but must be present, not blank).
+test('nerd-font mode has non-empty PUA glyphs', () => {
+  const t = makeTheme({ glyphs: 'nerd-font', colors: false, icons: true })
+  assert.equal(t.glyph('branch').codePointAt(0), 0xe0a0)
+  assert.ok(t.glyph('effort').length > 0 && t.glyph('model').length > 0)
+})
