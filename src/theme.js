@@ -1,34 +1,41 @@
 // ANSI colors + glyph tables. `ascii` mode is the guaranteed-safe fallback —
 // emoji and Nerd Font glyph widths vary across terminals, so ascii is always kept.
 
-// Accents use the BRIGHT ANSI set (90s), not the standard set (30s): the
-// standard codes render muddy/dark on dark themes, which is exactly the
-// "too dark to read" complaint. `orange` is 256-color — there is no orange in
-// the 16-color set — which is safe here because the renderer already assumes a
-// capable terminal (emoji, Nerd Fonts, OSC 8 links). The reset countdown warms
-// to `orange` as it approaches but never to red: an imminent reset is relief,
-// not danger, so the alarm colours have no caller and are deliberately absent.
+// Accents are 24-bit TRUECOLOR (`38;2;r;g;b`), not the ANSI palette slots (the
+// 90s): a palette slot is only a *name* the user's terminal theme maps to its
+// own hue, so the same "green" looked lime in one terminal and forest in another
+// — the exact cross-terminal drift we're removing. Pinning RGB makes every
+// state colour identical on any terminal (the "same experience for all users"
+// goal). 24-bit is near-universal on the terminals that run Claude Code; a rare
+// terminal without it just ignores the sequence and shows plain readable text.
+// Values are sampled from the terminal rendering the user finds easy on the eyes
+// (a lime green, a vivid red, a warm gold), so the palette reproduces what reads
+// well to them rather than an arbitrary set; `orange` is a derived amber, one
+// step warmer than `yellow`. The reset countdown warms yellow → `orange` but
+// never to red — an imminent reset is relief, not danger — so the alarm reds
+// have no caller and stay absent.
 //
-// There is deliberately no foreground colour for ordinary text. Colour is
-// reserved for values that carry state; everything else takes one of the three
-// tiers below.
+// `dim`/`bold` deliberately STAY as SGR attributes, not RGB: `dim` (SGR 2) is
+// the muted grey for identity text and separators, and it must *adapt* to the
+// user's background (softens relative to it, never inverts on a light theme). A
+// hardcoded grey would ignore the background and risk vanishing on a matching
+// one — so only the state colours are pinned; the chrome keeps adapting.
 const SGR = {
   dim: 2, bold: 1,
-  red: 91, green: 92, yellow: 93, blue: 94, magenta: 95, cyan: 96,
-  orange: '38;5;208',
+  red: '38;2;236;37;61', green: '38;2;169;222;90', yellow: '38;2;245;203;65',
+  blue: '38;2;88;166;255', magenta: '38;2;188;140;255', cyan: '38;2;57;197;207',
+  orange: '38;2;239;157;43',
 }
 
 // `model` gets 🧠 and `thinking` the thought balloon: thinking.enabled is a
 // near-always-true boolean on current models, so the brain reads better on the
 // segment that actually names which model you're talking to. `reset` is a
 // monochrome sand-timer (⧗, not the ⏳ emoji) precisely so it can take the
-// urgency color that the reset-countdown segment paints it with. `lines` gets a
-// pencil so its session-edit +/- diff can't be mistaken for the repo segment's
-// identical-looking working-tree +/- diff sitting next to it.
+// urgency color that the reset-countdown segment paints it with.
 const GLYPHS = {
-  emoji:       { branch: '🌿', duration: '⏱', cost: '💰', effort: '⚡', model: '🧠', thinking: '💭', pr: '🔎', worktree: '🌲', reset: '⧗', lines: '✎' },
-  'nerd-font': { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⧗', lines: '✎' },
-  ascii:       { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '', lines: '' },
+  emoji:       { branch: '🌿', duration: '⏱', cost: '💰', effort: '⚡', model: '🧠', thinking: '💭', pr: '🔎', worktree: '🌲', reset: '⧗' },
+  'nerd-font': { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⧗' },
+  ascii:       { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '' },
 }
 
 const BAR = {

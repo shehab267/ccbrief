@@ -88,31 +88,31 @@ const at = (minsLeft) => BY_ID.fiveHour.format(
 )
 test('tone boundary: 91m → neutral (dim), not green', () => {
   assert.ok(at(91).includes('\x1b[2m1h 31m\x1b[0m'))
-  assert.ok(!at(91).includes('\x1b[93m') && !at(91).includes('\x1b[92m'))
+  assert.ok(!at(91).includes('\x1b[38;2;245;203;65m') && !at(91).includes('\x1b[38;2;169;222;90m'))
 })
-test('tone boundary: 90m → yellow', () => assert.ok(at(90).includes('\x1b[93m1h 30m\x1b[0m')))
-test('tone boundary: 46m → yellow', () => assert.ok(at(46).includes('\x1b[93m46m\x1b[0m')))
-test('tone boundary: 45m → orange (256)', () => assert.ok(at(45).includes('\x1b[38;5;208m45m\x1b[0m')))
+test('tone boundary: 90m → yellow', () => assert.ok(at(90).includes('\x1b[38;2;245;203;65m1h 30m\x1b[0m')))
+test('tone boundary: 46m → yellow', () => assert.ok(at(46).includes('\x1b[38;2;245;203;65m46m\x1b[0m')))
+test('tone boundary: 45m → orange', () => assert.ok(at(45).includes('\x1b[38;2;239;157;43m45m\x1b[0m')))
 test('tone: never red, even at 1 minute (orange, not red)', () => {
   const out = at(1)
-  assert.ok(out.includes('\x1b[38;5;208m'))
-  assert.ok(!out.includes('\x1b[91m') && !out.includes('38;5;196') && !out.includes('38;5;202'))
+  assert.ok(out.includes('\x1b[38;2;239;157;43m'))
+  assert.ok(!out.includes('\x1b[38;2;236;37;61m') && !out.includes('38;5;196') && !out.includes('38;5;202'))
 })
 test('reset due is dim, never red', () => {
   const out = at(-5)
   assert.ok(out.includes('\x1b[2mreset due\x1b[0m'))
-  assert.ok(!out.includes('\x1b[91m') && !out.includes('38;5;196'))
+  assert.ok(!out.includes('\x1b[38;2;236;37;61m') && !out.includes('38;5;196'))
 })
 
 // Percent keeps the usage scale (green <70, yellow ≥70, red ≥90) — "no red"
 // applies only to the countdown, never the percent.
 const pctTone = (used) => BY_ID.fiveHour.format({ now: NOW, rate_limits: { five_hour: { used_percentage: used } } }, colored, { showTime: false, showPercent: true })
 test('percent tone: 69% → green, 70% → yellow (usage boundary)', () => {
-  assert.ok(pctTone(69).includes('\x1b[92m69%\x1b[0m'))
-  assert.ok(pctTone(70).includes('\x1b[93m70%\x1b[0m'))
+  assert.ok(pctTone(69).includes('\x1b[38;2;169;222;90m69%\x1b[0m'))
+  assert.ok(pctTone(70).includes('\x1b[38;2;245;203;65m70%\x1b[0m'))
 })
 test('percent tone: ≥90% → red (usage signal, not the countdown)', () => {
-  assert.ok(pctTone(95).includes('\x1b[91m95%\x1b[0m'))
+  assert.ok(pctTone(95).includes('\x1b[38;2;236;37;61m95%\x1b[0m'))
 })
 
 // The inter-part separator is dimmed chrome, never full-bright (premium palette).

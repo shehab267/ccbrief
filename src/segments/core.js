@@ -1,7 +1,11 @@
 // Core segments. Each segment is a pure { id, section, isAvailable, format } object.
 // `repo` (Task 5) and `context` (Task 6) are appended to this file as they land.
 import { clean } from '../format.js'
+import { optionDefaults } from './options.js'
 const basename = (p) => String(p ?? '').split(/[\\/]/).filter(Boolean).pop() ?? ''
+// Default visibility of the repo diff, from the single source of truth (options.js)
+// so it can't drift from what withOptions writes into the config entry.
+const REPO_DEFAULTS = optionDefaults('repo')
 
 export const directory = {
   id: 'directory',
@@ -24,13 +28,16 @@ export const repo = {
   id: 'repo',
   section: 'core',
   isAvailable: (input) => Boolean(input?.git),
-  format: (input, theme) => {
+  format: (input, theme, entry) => {
     const name = clean(input.workspace?.repo?.name ?? basename(input.workspace?.current_dir))
     const branch = clean(input.git.branch)
-    const { added, removed } = input.git
     const glyph = theme.glyph('branch')
     const head = `${glyph ? glyph + ' ' : ''}${theme.primary(`${name}/${branch}`)}`
-    if (!added && !removed) return head
+    // `+N/-M` is the git working-tree diff vs HEAD. Independently toggleable
+    // (showDiff) so the branch can stand alone; still hidden when the tree is clean.
+    const showDiff = entry?.showDiff ?? REPO_DEFAULTS.showDiff
+    const { added, removed } = input.git
+    if (!showDiff || (!added && !removed)) return head
     return `${head} ${theme.color('green', `+${added}`)}/${theme.color('red', `-${removed}`)}`
   },
 }

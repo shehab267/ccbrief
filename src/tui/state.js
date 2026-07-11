@@ -2,7 +2,7 @@
 // (tui/index.js) is the only impure part; all state transitions live here so
 // they're deterministic and unit-tested.
 import { PRESETS } from '../config.js'
-import { LIMIT_DEFAULTS } from '../segments/index.js'
+import { optionsFor, optionDefaults } from '../segments/index.js'
 
 export function initialState(config) {
   return { ...config, segments: config.segments.map((s) => ({ ...s })) }
@@ -27,9 +27,9 @@ export function reduce(state, action) {
     }
     case 'preset': {
       if (action.preset === 'custom') return { ...state, preset: 'custom' }
-      // Re-inject each window's toggle defaults so switching presets doesn't strip
-      // showTime/showPercent (they'd otherwise vanish until the next config reload).
-      const segments = PRESETS[action.preset].map((id) => ({ id, enabled: true, ...(LIMIT_DEFAULTS[id] ?? {}) }))
+      // Re-inject each segment's declared toggle defaults so switching presets
+      // doesn't strip them (they'd otherwise vanish until the next config reload).
+      const segments = PRESETS[action.preset].map((id) => ({ id, enabled: true, ...optionDefaults(id) }))
       return { ...state, preset: action.preset, segments }
     }
     case 'setOption': {
@@ -53,11 +53,13 @@ export function stateToConfig(state) {
     colors: state.colors,
     icons: state.icons,
     segments: state.segments.map((s) => {
-      // Preserve the rate-limit toggles; non-limit segments never carry them, so
-      // the round-trip stays exact (loadConfig re-derives the identical entry).
+      // Preserve each segment's declared toggles; segments that declare none carry
+      // nothing, so the round-trip stays exact (loadConfig re-derives the identical
+      // entry via the same registry).
       const entry = { id: s.id, enabled: s.enabled }
-      if (typeof s.showTime === 'boolean') entry.showTime = s.showTime
-      if (typeof s.showPercent === 'boolean') entry.showPercent = s.showPercent
+      for (const o of optionsFor(s.id)) {
+        if (typeof s[o.key] === 'boolean') entry[o.key] = s[o.key]
+      }
       return entry
     }),
   }

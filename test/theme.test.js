@@ -7,10 +7,11 @@ test('colors off → no ANSI', () => {
   assert.equal(t.color('green', 'ok'), 'ok')
 })
 
-test('colors on → wraps in bright SGR', () => {
+test('colors on → wraps in truecolor SGR', () => {
   const t = makeTheme({ glyphs: 'emoji', colors: true, icons: true })
-  // bright green (92), not the muddy standard green (32)
-  assert.equal(t.color('green', 'ok'), '\x1b[92mok\x1b[0m')
+  // 24-bit green (38;2;169;222;90) — pinned RGB, not a palette slot the terminal
+  // theme would remap, so the hue is identical on every terminal.
+  assert.equal(t.color('green', 'ok'), '\x1b[38;2;169;222;90mok\x1b[0m')
 })
 
 // Identity text is toned to grey with `dim` — adaptive, so it softens the
@@ -26,14 +27,14 @@ test('secondary recedes to dim when colors on, untouched when off', () => {
   assert.equal(makeTheme({ colors: false }).secondary('72k'), '72k')
 })
 
-test('orange is a 256-color code', () => {
-  assert.equal(makeTheme({ colors: true }).color('orange', 'x'), '\x1b[38;5;208mx\x1b[0m')
+test('orange is a truecolor code', () => {
+  assert.equal(makeTheme({ colors: true }).color('orange', 'x'), '\x1b[38;2;239;157;43mx\x1b[0m')
 })
 
 test('bar with a tone → colored fill + dimmed empty', () => {
   const t = makeTheme({ glyphs: 'emoji', colors: true })
   // 33% of 9 = 3 filled; fill takes the tone, remainder is dimmed
-  assert.equal(t.bar(33, 9, 'green'), '\x1b[92m━━━\x1b[0m\x1b[2m──────\x1b[0m')
+  assert.equal(t.bar(33, 9, 'green'), '\x1b[38;2;169;222;90m━━━\x1b[0m\x1b[2m──────\x1b[0m')
 })
 
 test('bar without a tone stays plain (snapshot/ascii safe)', () => {

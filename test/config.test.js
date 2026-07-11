@@ -39,9 +39,17 @@ test('detailed preset injects weekly toggle defaults (time + percent)', () => {
   const wk = loadConfig({ preset: 'detailed' }).segments.find((s) => s.id === 'weekly')
   assert.deepEqual(wk, { id: 'weekly', enabled: true, showTime: true, showPercent: true })
 })
-test('non-limit segments never carry toggle keys', () => {
+test('repo carries its showDiff toggle (default hidden)', () => {
   const repo = loadConfig({ preset: 'standard' }).segments.find((s) => s.id === 'repo')
-  assert.deepEqual(repo, { id: 'repo', enabled: true })
+  assert.deepEqual(repo, { id: 'repo', enabled: true, showDiff: false })
+})
+test('a segment that declares no toggles carries only { id, enabled }', () => {
+  const model = loadConfig({ preset: 'standard' }).segments.find((s) => s.id === 'model')
+  assert.deepEqual(model, { id: 'model', enabled: true })
+})
+test('custom preserves showDiff and drops unknown keys', () => {
+  const c = loadConfig({ preset: 'custom', segments: [{ id: 'repo', enabled: true, showDiff: false, bogus: 1 }] })
+  assert.deepEqual(c.segments[0], { id: 'repo', enabled: true, showDiff: false })
 })
 test('custom preserves showTime/showPercent and drops unknown keys', () => {
   const c = loadConfig({ preset: 'custom', segments: [{ id: 'fiveHour', enabled: true, showTime: false, showPercent: true, bogus: 1 }] })

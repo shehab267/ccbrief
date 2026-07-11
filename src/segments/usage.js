@@ -1,6 +1,7 @@
 // Usage segments: token counts, remaining %, duration, cost, and the Pro/Max
 // rate-limit windows. Each hides when its source field is null/absent.
 import { formatDuration, formatCountdown, formatTokens } from '../format.js'
+import { optionDefaults } from './options.js'
 
 export const tokens = {
   id: 'tokens', section: 'usage',
@@ -32,15 +33,9 @@ export const cost = {
   format: (input, theme) => theme.secondary(`$${Number(input.cost.total_cost_usd).toFixed(2)}`),
 }
 
-// Per-window defaults for the two independent toggles. Session shows time only —
-// the 5-hour countdown is the number checked most, and the line stays compact;
-// its percent is one keystroke away in the TUI. Weekly shows both, because a
-// multi-day countdown alone says little about how much quota is left. Exported
-// so config.js can inject these when a preset derives its segment list.
-export const LIMIT_DEFAULTS = {
-  fiveHour: { showTime: true, showPercent: false },
-  weekly: { showTime: true, showPercent: true },
-}
+// The two independent toggles' defaults now live in the segment-options registry
+// (segments/options.js: fiveHour = time-only, weekly = time + percent), so config,
+// the TUI, and this format share one source of truth.
 
 // Countdown tone, by TIME REMAINING — and deliberately only two warm steps.
 // Neutral (no colour) while the reset is far off, yellow inside 90 min, orange
@@ -80,7 +75,7 @@ function limit(id, key) {
     },
     format: (input, theme, entry) => {
       const rl = input.rate_limits[key]
-      const d = LIMIT_DEFAULTS[id]
+      const d = optionDefaults(id)
       const showTime = entry?.showTime ?? d.showTime
       const showPercent = entry?.showPercent ?? d.showPercent
       const parts = []

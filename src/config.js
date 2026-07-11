@@ -1,7 +1,7 @@
 // Config schema: defaults, presets, and a forward-compatible loader. Unknown or
 // invalid fields fall back to defaults so a hand-edited or future config never
 // crashes the renderer.
-import { BY_ID, LIMIT_DEFAULTS } from './segments/index.js'
+import { BY_ID, optionsFor } from './segments/index.js'
 
 export const PRESETS = {
   minimal: ['repo', 'context', 'model'],
@@ -14,18 +14,18 @@ export const PRESETS = {
   detailed: ['directory', 'repo', 'lines', 'context', 'tokens', 'cost', 'fiveHour', 'weekly', 'effort', 'model'],
 }
 
-// A segment entry is { id, enabled }, plus two toggles for the rate-limit
-// windows. withOptions attaches showTime/showPercent ONLY to segments that have
-// defaults (the limit windows), keeping valid provided values and dropping every
-// other key — so a hand-edited config can't smuggle unknown fields through, and
-// non-limit segments never carry toggles they'd ignore (which would also break
-// render.test.js's exact matches and the TUI's stateToConfig↔loadConfig round-trip).
+// A segment entry is { id, enabled }, plus whatever show/hide toggles that segment
+// declares in the options registry (repo → showDiff; the rate-limit windows →
+// showTime/showPercent). withOptions attaches ONLY those declared keys, keeping
+// valid provided values and dropping every other key — so a hand-edited config
+// can't smuggle unknown fields through, and a segment never carries a toggle it
+// would ignore (which would also break render.test.js's exact matches and the
+// TUI's stateToConfig↔loadConfig round-trip). Because every toggle defaults to
+// its current on-screen behaviour, adding one changes no rendered output.
 function withOptions(id, src = {}) {
   const entry = { id, enabled: src.enabled !== false }
-  const d = LIMIT_DEFAULTS[id]
-  if (d) {
-    entry.showTime = typeof src.showTime === 'boolean' ? src.showTime : d.showTime
-    entry.showPercent = typeof src.showPercent === 'boolean' ? src.showPercent : d.showPercent
+  for (const o of optionsFor(id)) {
+    entry[o.key] = typeof src[o.key] === 'boolean' ? src[o.key] : o.default
   }
   return entry
 }
