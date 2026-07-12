@@ -49,7 +49,7 @@ export function stateToConfig(state) {
     preset: state.preset,
     layout: state.layout,
     maxRows: state.maxRows,
-    glyphs: state.glyphs,
+    symbols: state.symbols,
     colors: state.colors,
     icons: state.icons,
     segments: state.segments.map((s) => {

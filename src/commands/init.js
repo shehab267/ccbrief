@@ -12,6 +12,39 @@ import { PREVIEW_INPUT } from '../preview.js'
 
 const bundledRenderer = () => join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'statusline.js')
 
+// What `init` says when it's done. It used to say `Preview: <line>` and stop, which
+// left the one question a first-time user actually has — "…and now what?" — for them
+// to answer alone. So the installer now ends by naming the next step.
+//
+// "No restart needed" is the documented behaviour, not a guess: Claude Code reloads
+// settings automatically, and the new status line shows up on the next interaction
+// (docs.claude.com → statusline). Saying "restart Claude Code" would be folklore.
+//
+// Plain text, no ANSI: this goes through console.log into terminals we don't control
+// (and into CI logs), and a next-steps message is the last place worth risking mojibake.
+//
+// Pure — the caller supplies the rendered preview and the path — so the wording is
+// unit-testable without touching a filesystem.
+export function nextSteps({ preview, configPath, fresh = true }) {
+  return [
+    '',
+    fresh ? '  ✔ ccbrief installed' : '  ✔ ccbrief updated — your existing configuration was kept',
+    '',
+    '  Preview (sample data)',
+    `    ${preview}`,
+    '',
+    '  Your status line is live. It appears on your next interaction with Claude Code —',
+    '  no restart needed.',
+    '',
+    '  What to do next',
+    '    npx ccbrief config      choose what it shows, with a live preview',
+    '    npx ccbrief uninstall   remove it and put your settings back',
+    '',
+    `  Config file: ${configPath}`,
+    '',
+  ].join('\n')
+}
+
 export async function runInit({ dir, copyRenderer, confirm, log, now = Date.now }) {
   const settingsPath = join(dir, 'settings.json')
   const ccbrief = join(dir, 'ccbrief')
@@ -62,6 +95,10 @@ export async function runInit({ dir, copyRenderer, confirm, log, now = Date.now 
   const refreshInterval = refreshIntervalFor(config)
   writeFileSync(settingsPath, JSON.stringify(patchSettings(existing, { command, refreshInterval }), null, 2) + '\n')
 
-  log('Preview: ' + render(PREVIEW_INPUT, config, { columns: 80 }))
+  log(nextSteps({
+    preview: render(PREVIEW_INPUT, config, { columns: 80 }),
+    configPath,
+    fresh: !saved, // a kept config means this run was an update, not a first install
+  }))
   return { changed: true, backup: null }
 }

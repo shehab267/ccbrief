@@ -1,5 +1,5 @@
-// ANSI colors + glyph tables. `ascii` mode is the guaranteed-safe fallback —
-// emoji and Nerd Font glyph widths vary across terminals, so ascii is always kept.
+// ANSI colors + symbol tables. `ascii` mode is the guaranteed-safe fallback —
+// emoji and Nerd Font symbol widths vary across terminals, so ascii is always kept.
 import { visibleWidth } from './width.js'
 
 // Accents are the NORMAL ANSI palette slots (31-36) — deliberately not 24-bit
@@ -27,20 +27,20 @@ const SGR = {
   cyanBold: '1;36',
 }
 
-// Four glyph modes. `simple` is the DEFAULT and the only one identical for every
-// user: it has NO pictographs (no emoji or Nerd glyph renders the same across
+// Four symbol sets. `simple` is the DEFAULT and the only one identical for every
+// user: it has NO pictographs (no emoji or Nerd Font icon renders the same across
 // fonts) — just text plus the one monochrome symbol every font ships, the ⧗
 // reset timer. `emoji` looks richest but each OS draws its own artwork and width.
 // `nerd-font` renders blank unless a patched Nerd Font is installed. `ascii` is
 // the pure-ASCII floor (no box-drawing at all).
 //
-// The countdown carries a timer in every mode, but a *different* one per mode,
+// The countdown carries a timer in every set, but a *different* one per set,
 // and that split is the cross-terminal fallback: `emoji` gets the ⏳ of the
 // reference line, while `simple` — the default — keeps ⧗, a monochrome symbol
 // every font ships and every terminal draws single-width. ⏳ is an emoji, so its
-// artwork and column width are the terminal's choice. The rich glyph is opt-in;
+// artwork and column width are the terminal's choice. The rich symbol is opt-in;
 // nobody lands on tofu by default.
-const GLYPHS = {
+const SYMBOLS = {
   simple:      { branch: '', tokens: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⧗' },
   emoji:       { branch: '🌿', tokens: '🔸', duration: '⏱', cost: '💰', effort: '⚡', model: '🧠', thinking: '💭', pr: '🔎', worktree: '🌲', reset: '⏳' },
   // Nerd Font Private-Use code points (Powerline + Font Awesome ranges) — render
@@ -59,8 +59,8 @@ const BAR = {
 
 const SEP = { simple: ' │ ', emoji: ' │ ', 'nerd-font': ' │ ', ascii: ' | ' }
 
-export function makeTheme({ glyphs = 'simple', colors = true, icons = true } = {}) {
-  const mode = GLYPHS[glyphs] ? glyphs : 'simple'
+export function makeTheme({ symbols = 'simple', colors = true, icons = true } = {}) {
+  const mode = SYMBOLS[symbols] ? symbols : 'simple'
   const bars = BAR[mode]
   const rawSep = SEP[mode]
   return {
@@ -70,23 +70,23 @@ export function makeTheme({ glyphs = 'simple', colors = true, icons = true } = {
     // identity/value text reads as the foreground (the visual hierarchy the
     // reference status line has). width.js strips SGR, so this is zero-width.
     sep: colors ? `\x1b[${SGR.dim}m${rawSep}\x1b[0m` : rawSep,
-    glyph(name) {
+    symbol(name) {
       if (!icons) return ''
-      return GLYPHS[mode][name] ?? ''
+      return SYMBOLS[mode][name] ?? ''
     },
-    // A glyph together with the gap that follows it — the ONE place that decides
+    // A symbol together with the gap that follows it — the ONE place that decides
     // icon spacing, so no segment re-invents it. Empty (no leading space) when the
-    // glyph is absent, so a mode with no icon leaves no hole. `tone` colours the
-    // glyph only, never the value beside it.
+    // symbol is absent, so a set with no icon leaves no hole. `tone` colours the
+    // symbol only, never the value beside it.
     //
-    // The gap comes from the glyph's MEASURED width, not from the mode name. A
-    // double-width glyph (every emoji) already occupies a trailing column its
+    // The gap comes from the symbol's MEASURED width, not from the set's name. A
+    // double-width symbol (every emoji) already occupies a trailing column its
     // artwork doesn't fill, so a space on top double-spaces it from its value;
     // anything single-width (⧗, Nerd Font points) still needs one. Measuring says
     // exactly that, where `mode === 'emoji'` only guesses it — and would jam any
-    // single-width glyph later added to the emoji table.
+    // single-width symbol later added to the emoji table.
     icon(name, tone) {
-      const g = this.glyph(name)
+      const g = this.symbol(name)
       if (!g) return ''
       return (tone ? this.color(tone, g) : g) + (visibleWidth(g) > 1 ? '' : ' ')
     },

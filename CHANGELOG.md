@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **`init` now tells you what to do next.** It used to print a preview and stop,
+  leaving the one question a first-time user actually has — "…and now what?" —
+  unanswered. It now closes with the preview, the fact that the status line is
+  already live (Claude Code reloads settings itself; no restart), how to change
+  it (`npx ccbrief config`), how to undo it (`npx ccbrief uninstall`), and where
+  the config file lives. Re-running over a config you have tuned reports an
+  *update* and says your configuration was kept.
+- **Plain-English names in the config picker.** Every segment is listed with its
+  name beside its id — `fiveHour → session limit (5h)`, `pr → pull request` — so
+  you never have to guess what a config key means.
 - **README images, generated from the real renderer.** `npm run demo` feeds the
   new `demo` fixture through `render()` and turns the ANSI it emits into HTML,
   resolved against a real dark and a real light terminal palette — so the
@@ -18,6 +28,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   chiefly why the context percentage disappears after `/compact`.
 
 ### Changed
+- **`standard` is the default preset**, not `detailed`. The promise is a *minimal*
+  status line, and ten segments on first run read as noise before they read as
+  information. `detailed` is one `p` keypress away in the picker. Existing configs
+  are untouched — this only changes a fresh install.
+- **The session (5-hour) window now shows time *and* usage by default**
+  (`⧗ 2h 0m · 40%`). The countdown says when relief arrives; the percent says
+  whether you need it, and shipping only half of that made the segment decorative.
+- **`glyphs` is now `symbols`** — in the config file, the picker and the docs. It
+  chooses the icons, the bar characters and the separator, and "glyphs" is a word
+  nobody should have to look up. **Old config files keep working**: a `glyphs` key
+  is read as `symbols`. In the picker the key moves from `g` to `y` (`s` is taken
+  by save); `g` still works and is simply no longer advertised.
+- **No abbreviations in the picker**: the option dots spell out `percent` instead
+  of `pct`.
 - Package description and keywords now say what ccbrief shows (context, tokens,
   cost, rate limits), not just that it is a status line.
 

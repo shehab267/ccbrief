@@ -4,7 +4,7 @@ import { formatDuration, formatCountdown, formatTokens } from '../format.js'
 import { optionDefaults } from './options.js'
 
 export const tokens = {
-  id: 'tokens', section: 'usage',
+  id: 'tokens', title: 'tokens in context', section: 'usage',
   // Current tokens in context = total_input + total_output (the canonical
   // context counts). Null before the first API call / post-/compact → hide.
   isAvailable: (input) =>
@@ -20,26 +20,26 @@ export const tokens = {
 }
 
 export const remaining = {
-  id: 'remaining', section: 'usage',
+  id: 'remaining', title: 'context left', section: 'usage',
   isAvailable: (input) => input?.context_window?.remaining_percentage != null,
   format: (input, theme) => theme.primary(`${Math.round(input.context_window.remaining_percentage)}% left`),
 }
 
 export const duration = {
-  id: 'duration', section: 'usage',
+  id: 'duration', title: 'session time', section: 'usage',
   isAvailable: (input) => input?.cost?.total_duration_ms != null,
   format: (input, theme) => `${theme.icon('duration')}${theme.primary(formatDuration(input.cost.total_duration_ms))}`,
 }
 
 export const cost = {
-  id: 'cost', section: 'usage',
+  id: 'cost', title: 'session cost', section: 'usage',
   isAvailable: (input) => input?.cost?.total_cost_usd != null,
   format: (input, theme) => theme.primary(`$${Number(input.cost.total_cost_usd).toFixed(2)}`),
 }
 
-// The two independent toggles' defaults now live in the segment-options registry
-// (segments/options.js: fiveHour = time-only, weekly = time + percent), so config,
-// the TUI, and this format share one source of truth.
+// The two independent toggles' defaults live in the segment-options registry
+// (segments/options.js: both windows show time + percent), so config, the picker,
+// and this format share one source of truth.
 
 // The countdown is GREEN, always — it has no urgency ramp, and that is the point.
 //
@@ -62,25 +62,25 @@ const usageTone = (pct) => (pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green')
 // its own `│`). Each part also hides when its own source is null, so we never
 // fabricate a 0% or a NaN countdown. Both parts off, or both sources null → ''
 // → render() treats it as hidden, leaving no stray separator.
-function limit(id, key) {
+function limit(id, title, key) {
   // Hoisted: these are constants, and format() runs on every render. (core.js does
   // the same for REPO_DEFAULTS — keep the two files agreeing on the idiom.)
   const D = optionDefaults(id)
   // The head of the window: its marker plus the gap before the first value.
   //
-  // Session wears the ⧗/⏳ timer in the countdown's green, so glyph and digits read
-  // as one object. When the glyph resolves empty (ascii mode OR icons-off) it falls
+  // Session wears the ⧗/⏳ timer in the countdown's green, so symbol and digits read
+  // as one object. When the symbol resolves empty (ascii set OR icons-off) it falls
   // back to `S`, so a bare countdown is never anonymous. Weekly wears a literal
-  // `wk` — a label, not a glyph, so it survives every mode and stays chrome-dim.
+  // `wk` — a label, not a symbol, so it survives every set and stays chrome-dim.
   //
-  // `wk` and `S` are WORDS: they always take a space. Only a real glyph goes
+  // `wk` and `S` are WORDS: they always take a space. Only a real symbol goes
   // through theme.icon(), which knows a double-width emoji already brings its own.
   const head = (theme) => {
     if (id === 'weekly') return theme.secondary('wk') + ' '
-    return theme.glyph('reset') ? theme.icon('reset', 'green') : theme.color('green', 'S') + ' '
+    return theme.symbol('reset') ? theme.icon('reset', 'green') : theme.color('green', 'S') + ' '
   }
   return {
-    id, section: 'usage',
+    id, title, section: 'usage',
     isAvailable: (input) => {
       const rl = input?.rate_limits?.[key]
       return rl != null && (rl.used_percentage != null || rl.resets_at != null)
@@ -108,5 +108,5 @@ function limit(id, key) {
   }
 }
 
-export const fiveHour = limit('fiveHour', 'five_hour')
-export const weekly = limit('weekly', 'seven_day')
+export const fiveHour = limit('fiveHour', 'session limit (5h)', 'five_hour')
+export const weekly = limit('weekly', 'weekly limit (7d)', 'seven_day')

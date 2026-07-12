@@ -29,28 +29,30 @@ function withOptions(id, src = {}) {
   return entry
 }
 
-// A fresh install shows everything, because subtracting is easier than discovering:
-// the segments you don't want are visible and one keypress from gone, whereas a
-// lean default hides the good stuff behind a config file you may never open.
+// A fresh install lands on `standard`, not `detailed`. The tool's promise is a
+// MINIMAL status line, and ten segments on first run is a wall of numbers that
+// reads as noise before it reads as information — the wrong first impression to
+// have to recover from. `detailed` is one `p` keypress away in the picker, and
+// discovery is the picker's job, not the default's.
 // This is also the fallback for any unknown preset — including the removed
 // `minimal` — so "invalid → defaults" stays literally true.
-export const DEFAULT_PRESET = 'detailed'
+export const DEFAULT_PRESET = 'standard'
 
 export const DEFAULT_CONFIG = {
   version: 1,
   preset: DEFAULT_PRESET,
   layout: 'auto',
   maxRows: 3,
-  glyphs: 'simple',
+  symbols: 'simple',
   colors: true,
   icons: true,
   segments: PRESETS[DEFAULT_PRESET].map((id) => withOptions(id)),
 }
 
-// `simple` is the default and the safe fallback: the only glyph mode identical
-// for every user (text + universal symbols), so an unknown/legacy value degrades
+// `simple` is the default and the safe fallback: the only symbol set identical
+// for every user (text + universal characters), so an unknown/legacy value degrades
 // to something that renders everywhere rather than to emoji (which varies).
-const GLYPHS = new Set(['simple', 'emoji', 'nerd-font', 'ascii'])
+const SYMBOLS = new Set(['simple', 'emoji', 'nerd-font', 'ascii'])
 const LAYOUTS = new Set(['auto', 'single-line', 'multi-line'])
 const PRESET_NAMES = new Set([...Object.keys(PRESETS), 'custom'])
 // Segments whose value changes over time → they drive refreshInterval.
@@ -61,7 +63,11 @@ const oneOf = (v, set, fallback) => (set.has(v) ? v : fallback)
 export function loadConfig(raw) {
   const r = raw && typeof raw === 'object' ? raw : {}
   const preset = oneOf(r.preset, PRESET_NAMES, DEFAULT_PRESET)
-  const glyphs = oneOf(r.glyphs, GLYPHS, 'simple')
+  // `symbols` was called `glyphs` — a typographer's word nobody should have to
+  // look up. The old key is still read here (and only here), so a config written
+  // by an earlier version keeps its icon set instead of silently snapping back to
+  // `simple`. Everything downstream sees exactly one name.
+  const symbols = oneOf(r.symbols ?? r.glyphs, SYMBOLS, 'simple')
   const layout = oneOf(r.layout, LAYOUTS, 'auto')
   const maxRows = Math.min(3, Math.max(1, Number.isFinite(r.maxRows) ? Math.trunc(r.maxRows) : 3))
   const colors = typeof r.colors === 'boolean' ? r.colors : true
@@ -78,7 +84,7 @@ export function loadConfig(raw) {
     // `segments` are ignored.
     segments = PRESETS[preset].map((id) => withOptions(id))
   }
-  return { version: 1, preset, layout, maxRows, glyphs, colors, icons, segments }
+  return { version: 1, preset, layout, maxRows, symbols, colors, icons, segments }
 }
 
 // 60s only when a time-based segment is enabled; otherwise omit refreshInterval

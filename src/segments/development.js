@@ -6,10 +6,10 @@ const basename = (p) => String(p ?? '').split(/[\\/]/).filter(Boolean).pop() ?? 
 const osc8 = (url, text) => `\x1b]8;;${url}\x07${text}\x1b]8;;\x07`
 
 export const lines = {
-  id: 'lines', section: 'development',
+  id: 'lines', title: 'lines changed', section: 'development',
   isAvailable: (input) => input?.cost?.total_lines_added != null || input?.cost?.total_lines_removed != null,
   // Session edits (cumulative lines Claude added/removed this session), not the
-  // working tree. Rendered as a bare +/- with no glyph.
+  // working tree. Rendered as a bare +/- with no icon.
   format: (input, theme) => {
     const a = input.cost.total_lines_added ?? 0
     const d = input.cost.total_lines_removed ?? 0
@@ -18,7 +18,7 @@ export const lines = {
 }
 
 export const pr = {
-  id: 'pr', section: 'development',
+  id: 'pr', title: 'pull request', section: 'development',
   isAvailable: (input) => input?.pr?.number != null,
   format: (input, theme) => {
     const text = theme.primary(`${theme.icon('pr')}#${clean(input.pr.number)} ${clean(input.pr.review_state ?? '')}`.trim())
@@ -29,7 +29,7 @@ export const pr = {
 }
 
 export const worktree = {
-  id: 'worktree', section: 'development',
+  id: 'worktree', title: 'git worktree', section: 'development',
   isAvailable: (input) => Boolean(input?.workspace?.git_worktree || input?.worktree?.path),
   format: (input, theme) => {
     const p = input.workspace?.git_worktree || input.worktree?.path

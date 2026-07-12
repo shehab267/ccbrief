@@ -4,7 +4,7 @@ import { clean } from '../src/format.js'
 import { BY_ID } from '../src/segments/index.js'
 import { makeTheme } from '../src/theme.js'
 
-const plain = makeTheme({ glyphs: 'ascii', colors: false, icons: false })
+const plain = makeTheme({ symbols: 'ascii', colors: false, icons: false })
 
 test('clean strips C0/C1 control chars (ESC, BEL, newline)', () => {
   assert.equal(clean('a\x1bb\x07c\nd'), 'abcd')

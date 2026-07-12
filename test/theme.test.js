@@ -3,12 +3,12 @@ import assert from 'node:assert/strict'
 import { makeTheme } from '../src/theme.js'
 
 test('colors off → no ANSI', () => {
-  const t = makeTheme({ glyphs: 'emoji', colors: false, icons: true })
+  const t = makeTheme({ symbols: 'emoji', colors: false, icons: true })
   assert.equal(t.color('green', 'ok'), 'ok')
 })
 
 test('colors on → wraps in a NORMAL ANSI palette slot, never truecolor', () => {
-  const t = makeTheme({ glyphs: 'emoji', colors: true, icons: true })
+  const t = makeTheme({ symbols: 'emoji', colors: true, icons: true })
   // Slot 32, not 38;2;r;g;b. The slot is resolved by the user's terminal theme
   // against its own background, which is what keeps it legible on dark AND light.
   assert.equal(t.color('green', 'ok'), '\x1b[32mok\x1b[0m')
@@ -50,7 +50,7 @@ test('cyanBold is bold + the normal cyan slot, not bright cyan', () => {
 })
 
 test('bar with a tone → colored fill + dimmed empty', () => {
-  const t = makeTheme({ glyphs: 'emoji', colors: true })
+  const t = makeTheme({ symbols: 'emoji', colors: true })
   // 33% of 9 = 3 filled; fill takes the tone, remainder is dimmed
   assert.equal(t.bar(33, 9, 'green'), '\x1b[32m━━━\x1b[0m\x1b[2m──────\x1b[0m')
 })
@@ -68,83 +68,83 @@ test('separators are dimmed when colors are on, plain when off', () => {
 // reference line's ⏳, while the DEFAULT (simple) keeps the monochrome ⧗ that
 // every font ships single-width. Nobody lands on tofu without opting in.
 test('emoji mode gets ⏳; the default mode falls back to the universal ⧗', () => {
-  assert.equal(makeTheme({ glyphs: 'emoji', colors: false, icons: true }).glyph('reset'), '⏳')
-  assert.equal(makeTheme({ colors: false, icons: true }).glyph('reset'), '⧗')
-  assert.equal(makeTheme({ glyphs: 'nerd-font', colors: false, icons: true }).glyph('reset'), '⧗')
+  assert.equal(makeTheme({ symbols: 'emoji', colors: false, icons: true }).symbol('reset'), '⏳')
+  assert.equal(makeTheme({ colors: false, icons: true }).symbol('reset'), '⧗')
+  assert.equal(makeTheme({ symbols: 'nerd-font', colors: false, icons: true }).symbol('reset'), '⧗')
 })
 
 test('emoji tokens glyph is the reference diamond; absent in simple mode', () => {
-  assert.equal(makeTheme({ glyphs: 'emoji', colors: false, icons: true }).glyph('tokens'), '🔸')
-  assert.equal(makeTheme({ colors: false, icons: true }).glyph('tokens'), '')
+  assert.equal(makeTheme({ symbols: 'emoji', colors: false, icons: true }).symbol('tokens'), '🔸')
+  assert.equal(makeTheme({ colors: false, icons: true }).symbol('tokens'), '')
 })
 
 test('icons off → glyph is empty', () => {
-  const t = makeTheme({ glyphs: 'emoji', colors: true, icons: false })
-  assert.equal(t.glyph('branch'), '')
+  const t = makeTheme({ symbols: 'emoji', colors: true, icons: false })
+  assert.equal(t.symbol('branch'), '')
 })
 
 test('emoji branch glyph', () => {
-  const t = makeTheme({ glyphs: 'emoji', colors: false, icons: true })
-  assert.equal(t.glyph('branch'), '🌿')
+  const t = makeTheme({ symbols: 'emoji', colors: false, icons: true })
+  assert.equal(t.symbol('branch'), '🌿')
 })
 
 test('emoji model glyph is distinct from thinking', () => {
-  const t = makeTheme({ glyphs: 'emoji', colors: false, icons: true })
-  assert.equal(t.glyph('model'), '🧠')
-  assert.equal(t.glyph('thinking'), '💭')
+  const t = makeTheme({ symbols: 'emoji', colors: false, icons: true })
+  assert.equal(t.symbol('model'), '🧠')
+  assert.equal(t.symbol('thinking'), '💭')
 })
 
 test('bar(42) is 4 filled + 5 empty in emoji mode', () => {
-  const t = makeTheme({ glyphs: 'emoji', colors: false, icons: true })
+  const t = makeTheme({ symbols: 'emoji', colors: false, icons: true })
   assert.equal(t.bar(42, 9), '━━━━─────')
 })
 
 test('ascii mode is pure ASCII', () => {
-  const t = makeTheme({ glyphs: 'ascii', colors: false, icons: true })
+  const t = makeTheme({ symbols: 'ascii', colors: false, icons: true })
   assert.equal(t.bar(42, 9), '####-----')
   assert.match(t.sep, /^ \| $/)
   // eslint-disable-next-line no-control-regex
-  assert.ok(/^[\x00-\x7f]*$/.test(t.glyph('branch') + t.bar(50) + t.sep))
+  assert.ok(/^[\x00-\x7f]*$/.test(t.symbol('branch') + t.bar(50) + t.sep))
 })
 
 // `simple` is the default: no pictographs (identical everywhere), but keeps the
 // universal ⧗ timer + box-drawing gauge/separator, so it still has structure.
 test('simple mode: no pictographs, keeps ⧗ + box-drawing', () => {
-  const t = makeTheme({ glyphs: 'simple', colors: false, icons: true })
+  const t = makeTheme({ symbols: 'simple', colors: false, icons: true })
   for (const n of ['branch', 'tokens', 'effort', 'model', 'duration', 'cost', 'pr', 'worktree']) {
-    assert.equal(t.glyph(n), '', `${n} should have no glyph in simple mode`)
+    assert.equal(t.symbol(n), '', `${n} should have no symbol in the simple set`)
   }
-  assert.equal(t.glyph('reset'), '⧗')  // the one universal symbol survives
+  assert.equal(t.symbol('reset'), '⧗')  // the one universal symbol survives
   assert.equal(t.bar(42, 9), '━━━━─────')
   assert.match(t.sep, /^ │ $/)
 })
 
-test('simple is the default glyph mode (no glyphs arg → no branch pictograph)', () => {
-  assert.equal(makeTheme({ colors: false, icons: true }).glyph('branch'), '')
+test('simple is the default symbol set (no symbols arg → no branch pictograph)', () => {
+  assert.equal(makeTheme({ colors: false, icons: true }).symbol('branch'), '')
 })
 
 // nerd-font is no longer empty: its glyphs are real Nerd-Font Private-Use points
 // (they render only with a Nerd Font installed, but must be present, not blank).
-test('nerd-font mode has non-empty PUA glyphs', () => {
-  const t = makeTheme({ glyphs: 'nerd-font', colors: false, icons: true })
-  assert.equal(t.glyph('branch').codePointAt(0), 0xe0a0)
-  assert.ok(t.glyph('effort').length > 0 && t.glyph('model').length > 0)
+test('nerd-font set has non-empty PUA symbols', () => {
+  const t = makeTheme({ symbols: 'nerd-font', colors: false, icons: true })
+  assert.equal(t.symbol('branch').codePointAt(0), 0xe0a0)
+  assert.ok(t.symbol('effort').length > 0 && t.symbol('model').length > 0)
 })
 
 // Icon spacing lives in ONE place (theme.icon), so no segment can re-invent it.
 // An emoji is double-width — the terminal reserves a trailing column its artwork
 // doesn't fill — so a space on top double-spaces the icon from its value.
 test('icon: double-width emoji brings its own gap; narrower glyphs take a space', () => {
-  assert.equal(makeTheme({ glyphs: 'emoji', colors: false }).icon('model'), '🧠')
-  assert.equal(makeTheme({ glyphs: 'simple', colors: false }).icon('reset'), '⧗ ')
-  assert.equal(makeTheme({ glyphs: 'nerd-font', colors: false }).icon('reset'), '⧗ ')
+  assert.equal(makeTheme({ symbols: 'emoji', colors: false }).icon('model'), '🧠')
+  assert.equal(makeTheme({ symbols: 'simple', colors: false }).icon('reset'), '⧗ ')
+  assert.equal(makeTheme({ symbols: 'nerd-font', colors: false }).icon('reset'), '⧗ ')
 })
 
 test('icon: absent glyph yields nothing at all — never a leading space', () => {
-  assert.equal(makeTheme({ glyphs: 'simple', colors: false }).icon('model'), '')
-  assert.equal(makeTheme({ glyphs: 'emoji', colors: false, icons: false }).icon('model'), '')
+  assert.equal(makeTheme({ symbols: 'simple', colors: false }).icon('model'), '')
+  assert.equal(makeTheme({ symbols: 'emoji', colors: false, icons: false }).icon('model'), '')
 })
 
 test('icon: tone colours the glyph only, and sits inside the gap', () => {
-  assert.equal(makeTheme({ glyphs: 'simple', colors: true }).icon('reset', 'green'), '\x1b[32m⧗\x1b[0m ')
+  assert.equal(makeTheme({ symbols: 'simple', colors: true }).icon('reset', 'green'), '\x1b[32m⧗\x1b[0m ')
 })

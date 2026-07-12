@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { runInit } from '../src/commands/init.js'
+import { runInit, nextSteps } from '../src/commands/init.js'
 import { runUninstall } from '../src/commands/uninstall.js'
 
 const seams = (over = {}) => ({ copyRenderer: () => {}, confirm: () => true, log: () => {}, now: () => 111, ...over })
@@ -43,7 +43,7 @@ test('pre-existing statusLine: aborts when confirm=false', async () => {
 // Re-running init is an idempotent repair (relink the renderer, re-patch settings),
 // NOT a factory reset — it must never throw away a config the user has tuned.
 const CUSTOM = {
-  version: 1, preset: 'custom', layout: 'auto', maxRows: 3, glyphs: 'ascii',
+  version: 1, preset: 'custom', layout: 'auto', maxRows: 3, symbols: 'ascii',
   colors: false, icons: false, segments: [{ id: 'model', enabled: true }],
 }
 
@@ -79,7 +79,7 @@ test('a corrupt config.json is replaced with the defaults', async () => {
     writeFileSync(join(dir, 'ccbrief', 'config.json'), junk)
     await runInit({ dir, ...seams() })
     const config = JSON.parse(readFileSync(join(dir, 'ccbrief', 'config.json'), 'utf8'))
-    assert.equal(config.preset, 'detailed', `init failed to repair config.json containing ${junk}`)
+    assert.equal(config.preset, 'standard', `init failed to repair config.json containing ${junk}`)
   }
 })
 
@@ -94,4 +94,41 @@ test('re-init keeps one pristine backup; uninstall restores pre-ccbrief settings
   const restored = JSON.parse(readFileSync(join(dir, 'settings.json'), 'utf8'))
   assert.equal('statusLine' in restored, false)
   assert.deepEqual(restored.permissions, ['x'])
+})
+
+// --- What init SAYS ----------------------------------------------------------
+// The installer used to print `Preview: <line>` and stop, leaving the one question a
+// first-time user actually has — "…and now what?" — unanswered. These pin the answer.
+
+test('init tells the user what to do next, not just what it rendered', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccbrief-init-'))
+  const said = []
+  await runInit({ dir, ...seams({ log: (m) => said.push(m) }) })
+  const out = said.join('\n')
+
+  assert.match(out, /ccbrief installed/)
+  assert.match(out, /npx ccbrief config/)      // how to change it
+  assert.match(out, /npx ccbrief uninstall/)   // how to undo it
+  assert.match(out, /no restart needed/i)      // the documented behaviour, stated
+  assert.match(out, /config\.json/)            // where the config lives
+  assert.match(out, /42%/)                     // and the preview is still there
+})
+
+// A re-run over a config the user already tuned is an update, not a first install —
+// and it must say so, or "installed" reads as "we just reset your setup".
+test('a re-run reports an update and says the existing config was kept', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccbrief-init-'))
+  await runInit({ dir, ...seams() })
+  const said = []
+  await runInit({ dir, ...seams({ log: (m) => said.push(m) }) })
+  const out = said.join('\n')
+  assert.match(out, /ccbrief updated/)
+  assert.match(out, /existing configuration was kept/)
+  assert.doesNotMatch(out, /ccbrief installed/)
+})
+
+test('nextSteps is pure: same inputs, same words, no filesystem', () => {
+  const msg = nextSteps({ preview: 'PREVIEW', configPath: '/tmp/x/config.json', fresh: true })
+  assert.ok(msg.includes('PREVIEW') && msg.includes('/tmp/x/config.json'))
+  assert.equal(msg, nextSteps({ preview: 'PREVIEW', configPath: '/tmp/x/config.json', fresh: true }))
 })
