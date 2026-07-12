@@ -8,7 +8,7 @@ import { mkdtempSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { runInit } from '../src/commands/init.js'
-import { runConfig, syncSettings } from '../src/commands/config.js'
+import { runConfig, syncSettings, configOutcome } from '../src/commands/config.js'
 import { loadConfig } from '../src/config.js'
 
 const seams = (over = {}) => ({ copyRenderer: () => {}, confirm: () => true, log: () => {}, now: () => 111, ...over })
@@ -77,4 +77,37 @@ test('saving in the TUI syncs settings.json', async () => {
   const res = await runConfig({ dir, tui: async () => noTimeBased })
   assert.equal(res.saved, true)
   assert.equal('refreshInterval' in settingsOf(dir).statusLine, false)
+})
+
+// `config` used to print NOTHING on the way out, so a save and a discard looked
+// identical: the picker cleared and the shell prompt came back either way.
+test('saving says so', async () => {
+  const dir = await installed()
+  const said = []
+  await runConfig({ dir, tui: async () => noTimeBased, log: (m) => said.push(m) })
+  assert.match(said.join('\n'), /✔ Saved/)
+})
+
+test('quitting says so', async () => {
+  const dir = await installed()
+  const said = []
+  await runConfig({ dir, tui: async () => undefined, log: (m) => said.push(m) })
+  assert.match(said.join('\n'), /nothing was saved/i)
+})
+
+// The dead end: `config` before `init` writes config.json happily, syncs nothing, and
+// used to say nothing — leaving you tuning a status line that would never appear.
+test('configuring before installing names the command that fixes it', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccbrief-cfg-')) // no init → no settings.json
+  const said = []
+  const res = await runConfig({ dir, tui: async () => noTimeBased, log: (m) => said.push(m) })
+  assert.equal(res.synced, false)
+  assert.match(said.join('\n'), /isn't installed yet/)
+  assert.match(said.join('\n'), /ccbrief init/)
+})
+
+test('configOutcome is pure and covers all three exits', () => {
+  assert.match(configOutcome({ saved: false }), /nothing was saved/i)
+  assert.match(configOutcome({ saved: true, synced: true, preview: 'x', configPath: '/c' }), /no restart needed/)
+  assert.match(configOutcome({ saved: true, synced: false, preview: 'x', configPath: '/c' }), /npx ccbrief init/)
 })
