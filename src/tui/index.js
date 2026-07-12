@@ -28,14 +28,16 @@ const SYMBOL_NOTES = {
 
 export function renderPanel(state, ctx = { columns: 80 }) {
   const preview = render(PREVIEW_INPUT, stateToConfig(state), ctx)
-  const enabled = state.segments.filter((s) => s.enabled).map((s) => s.id).join(', ')
+  // No `segments: directory, repo, fiveHour, …` summary line here. It said nothing the
+  // titled, checkboxed rows below don't say better, and it was the last place in the
+  // picker where a raw config key stood alone with no plain word beside it.
+  //
   // The keymap stays global and static. The per-window time/percent toggles are not
   // listed here — they get a dedicated plain-language tip (optionHint) shown only
   // while a limit row is focused, which reads as guidance instead of one more
   // cryptic key token crammed into this line.
   return [
     `ccbrief · configuration                 preset: ${state.preset}`,
-    `segments: ${enabled}`,
     `symbols: ${state.symbols} (${SYMBOL_NOTES[state.symbols] ?? ''})   colors: ${state.colors ? 'on' : 'off'}   icons: ${state.icons ? 'on' : 'off'}   layout: ${state.layout}`,
     `Preview ${'─'.repeat(Math.max(0, ctx.columns - 8))}`,
     ` ${preview}`,
