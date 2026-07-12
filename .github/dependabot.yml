@@ -1,0 +1,28 @@
+version: 2
+
+# The workflows pin their actions to a commit SHA rather than a tag, because a tag is
+# mutable and one of those jobs holds id-token: write and can publish to npm. A pin with
+# nothing to refresh it is just an action that never gets its security fixes, so the two
+# belong together: this opens the PR that moves the SHA, with the version in the comment.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']
+
+  # The renderer ships with zero runtime dependencies and the rest is devDependencies, so
+  # this is a small surface — but esbuild builds the bundle users actually run.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore
+    groups:
+      dev:
+        patterns: ['*']
