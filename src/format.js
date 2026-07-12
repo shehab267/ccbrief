@@ -1,5 +1,5 @@
 // Shared value formatters used by usage segments (kept out of segment files so
-// duration/countdown/token rendering is defined and tested in one place).
+// countdown/token rendering is defined and tested in one place).
 
 // Strip terminal control characters (C0 + C1 — ESC, BEL, newlines, …) from
 // session-derived values so a hostile directory/branch/PR field can't inject
@@ -13,14 +13,6 @@ export function clean(str) {
     if (c > 0x1f && c !== 0x7f && !(c >= 0x80 && c <= 0x9f)) out += ch
   }
   return out
-}
-
-export function formatDuration(ms) {
-  const totalMin = Math.floor((Number(ms) || 0) / 60_000)
-  if (totalMin < 1) return '<1m'
-  const h = Math.floor(totalMin / 60)
-  const m = totalMin % 60
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
 // Countdown to a rate-limit reset. Once the timestamp has passed we show

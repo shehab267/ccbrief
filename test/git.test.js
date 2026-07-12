@@ -40,11 +40,31 @@ test('second call with same session_id uses cache (no spawn)', () => {
 })
 
 test('gitCacheName confines the cache filename (no path escape)', () => {
-  assert.equal(gitCacheName('abc-123_XYZ'), 'git-abc-123_XYZ.json') // safe chars kept as-is
-  const evil = gitCacheName('../../etc/passwd')
-  assert.ok(!evil.includes('/') && !evil.includes('..'), evil)      // cannot traverse out of cacheDir
-  assert.equal(gitCacheName('a/b\\c'), 'git-a_b_c.json')            // separators neutralized
-  assert.equal(gitCacheName(undefined), 'git-default.json')         // missing id → stable default
+  const evil = gitCacheName('../../etc/passwd', '/x')
+  assert.ok(!evil.includes('/') && !evil.includes('..'), evil)             // cannot traverse out of cacheDir
+  assert.match(gitCacheName('abc-123_XYZ', '/x'), /^git-abc-123_XYZ-[0-9a-f]{12}\.json$/) // safe chars kept
+  assert.match(gitCacheName('a/b\\c', '/x'), /^git-a_b_c-[0-9a-f]{12}\.json$/)            // separators neutralized
+  assert.match(gitCacheName(undefined, '/x'), /^git-default-[0-9a-f]{12}\.json$/)         // missing id → stable
+})
+
+// The bug the directory half of the key exists to kill. The cache was keyed on the
+// session ALONE, so the second directory a session rendered — /add-dir, a cd, a
+// worktree — was served the first one's branch for the next three seconds. A status
+// line confidently naming the wrong branch is worse than one naming none.
+test('the cache key is the directory as well as the session', () => {
+  assert.notEqual(gitCacheName('s1', '/a'), gitCacheName('s1', '/b'))
+})
+
+test('a second directory in the same session is not served the first one\'s branch', () => {
+  const repo = tmpRepo()
+  const notARepo = mkdtempSync(join(tmpdir(), 'ccbrief-plain-'))
+  const cacheDir = mkdtempSync(join(tmpdir(), 'ccbrief-cache-'))
+  const session = 'same-session'
+
+  assert.equal(collectGit({ workspace: { current_dir: repo }, session_id: session }, { cacheDir }).branch, 'main')
+  // Same session, different directory, well inside the 3s TTL: it must run git again
+  // and report "not a repo" rather than hand back the cached `main`.
+  assert.equal(collectGit({ workspace: { current_dir: notARepo }, session_id: session }, { cacheDir }), null)
 })
 
 test('returns null outside a git repo', () => {

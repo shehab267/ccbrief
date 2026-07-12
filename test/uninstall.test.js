@@ -3,8 +3,31 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { runUninstall } from '../src/commands/uninstall.js'
+import { runUninstall, isInstalled } from '../src/commands/uninstall.js'
 import { commandString } from '../src/paths.js'
+
+// The crash. `~/.claude` need not exist — a fresh machine, a custom CLAUDE_CONFIG_DIR,
+// a folder deleted by hand — and an unguarded readdirSync there threw ENOENT, so the
+// LAST thing a departing user saw was a raw Node stack trace and exit 1.
+test('a config dir that does not exist → says so, does not throw', async () => {
+  const dir = join(mkdtempSync(join(tmpdir(), 'ccbrief-un-')), 'never-created')
+  const said = []
+  const res = await runUninstall({ dir, removeDir: false, log: (m) => said.push(m) })
+  assert.deepEqual(res, { restored: false, removedBlock: false })
+  assert.match(said.join('\n'), /nothing to undo/)
+})
+
+// …and the CLI asks its one scary question only when there is something to remove.
+test('isInstalled is false for a dir with nothing of ours in it', () => {
+  assert.equal(isInstalled(join(mkdtempSync(join(tmpdir(), 'ccbrief-un-')), 'never-created')), false)
+  assert.equal(isInstalled(mkdtempSync(join(tmpdir(), 'ccbrief-un-'))), false)
+})
+
+test('uninstalling nothing still says something', async () => {
+  const said = []
+  await runUninstall({ dir: mkdtempSync(join(tmpdir(), 'ccbrief-un-')), removeDir: false, log: (m) => said.push(m) })
+  assert.match(said.join('\n'), /nothing to undo/)
+})
 
 test('restores the most recent backup', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'ccbrief-un-'))

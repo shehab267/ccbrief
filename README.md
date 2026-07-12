@@ -16,13 +16,8 @@ active model — the same line rendered on a dark and a light terminal theme.](h
 ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
 ```
 
-<sub>That's one line, shown above on two terminal themes. ccbrief's colors are ANSI <em>palette
-slots</em>, not hard-coded RGB, so your terminal resolves them against its own background and the line
-stays readable on dark and light alike — see <a href="#colors-and-symbols">Colors and symbols</a>.</sub>
-
-```sh
-npx ccbrief init
-```
+<sub>One line, shown above on a dark and a light terminal — the same colors, resolved by each theme.
+See <a href="#colors-and-symbols">Colors and symbols</a>.</sub>
 
 > **Not affiliated with, or endorsed by, Anthropic.** ccbrief is an independent, open-source project
 > that reads the data Claude Code already exposes. No network calls, no telemetry.
@@ -50,11 +45,9 @@ Requires **Node ≥ 22**. Works on **Windows, macOS, Linux and  WSL**.
 npx ccbrief@latest init
 ```
 
-**Re-running `init` is how you upgrade.** `init` *copies* the renderer into `~/.claude/ccbrief/`, so
-pulling a newer version of the package on its own changes nothing — you have to run `init` again to
-copy the new renderer over the old one.
-
-It's safe to re-run: it never resets a config you've tuned, and it keeps your existing settings.
+**Re-running `init` is how you upgrade** — it *copies* the renderer into `~/.claude/ccbrief/`, so a
+newer package on its own changes nothing until you run it again. It's safe to re-run: it keeps the
+config you've tuned and your existing settings.
 
 <details>
 <summary>Installed globally instead?</summary>
@@ -111,28 +104,33 @@ session and right after `/compact` — you'll see fewer segments, never a made-u
 npx ccbrief config
 ```
 
-An interactive picker with a live preview. Every segment is listed with its plain-English name, so you
-never have to guess what `fiveHour` means:
+An interactive picker with a live preview. **Every segment ccbrief has is listed** — the ones you're
+showing, then the ones you could be — each with a plain-English name, so you never have to guess what
+`fiveHour` means:
 
 ```
+Segments — 4 of 15 shown ──────────────────────────────
 ▸ [x] repo        repository / branch  diff ○
   [x] context     context used
   [x] fiveHour    session limit (5h)   time ●  percent ●
   [x] model       model
+  [ ] directory   current folder
+  [ ] pr          pull request
+  ...
 ```
 
 Saving also re-syncs `settings.json`, so changes take effect on Claude Code's next render — no reinstall.
 
 | Key | Does |
 |-----|------|
-| `space` | turn the focused segment on / off |
+| `space` | show / hide the focused segment |
 | `↑` `↓` | move between segments |
 | `←` `→` | reorder the focused segment |
 | `p` `y` `c` `i` `l` | cycle preset · symbols · colors · icons · layout |
 | `d` | on `repo`: show/hide the working-tree diff (`+3/-1`) |
 | `t` `%` | on `fiveHour` / `weekly`: show/hide the countdown / the usage percent |
-| `↵` or `s` | save and exit |
-| `esc` or `q` | quit without saving |
+| `↵` | save and exit |
+| `esc` | quit without saving |
 
 ### The config file
 
@@ -147,12 +145,12 @@ optional — missing or malformed falls back to defaults and never breaks the st
 | `symbols` | `simple` · `emoji` · `nerd-font` · `ascii` | `simple` |
 | `colors` | `true` · `false` | `true` |
 | `icons` | `true` · `false` | `true` |
-| `segments` | ordered list — used when `preset` is `custom` | — |
+| `segments` | ordered list — **only read when `preset` is `custom`** | — |
 
 <sub><code>symbols</code> used to be called <code>glyphs</code>. Configs written by an older version still
 work — the old name is read as <code>symbols</code>.</sub>
 
-`custom` is also how you reach the segments that aren't in either preset (see the ✎ rows below):
+The picker writes this for you. Written by hand, a `custom` config looks like:
 
 ```json
 {
@@ -160,12 +158,14 @@ work — the old name is read as <code>symbols</code>.</sub>
   "segments": [
     { "id": "repo", "enabled": true, "showDiff": true },
     { "id": "context", "enabled": true },
-    { "id": "duration", "enabled": true },
     { "id": "fiveHour", "enabled": true, "showTime": true, "showPercent": true },
     { "id": "model", "enabled": true }
   ]
 }
 ```
+
+A named preset (`standard`, `detailed`) derives its own list, so it carries no `segments` key —
+editing one there would do nothing. Unknown ids are ignored rather than fatal.
 
 ---
 
@@ -185,16 +185,14 @@ Every segment hides itself when its data isn't there, so you only ever see live 
 | `lines` | Lines Claude added/removed this session (`+120/-34`) | Absent |
 | `effort` | Reasoning effort (`high`) | Absent |
 | `model` | Active model (`Opus`) | Absent |
-| ✎ `duration` | Session wall-clock (`1h 24m`) | Absent |
-| ✎ `remaining` | Context left (`58% left`) | Null |
-| ✎ `pr` | PR number + review state, clickable (OSC 8) | No associated PR |
-| ✎ `worktree` | Active git worktree name | Not in a worktree |
-| ✎ `thinking` | Thinking indicator | Thinking not enabled |
-| ✎ `outputStyle` | Output style name (`concise`) | Absent |
-| ✎ `agent` | Active subagent name | No active subagent |
+| `pr` | PR number + review state, clickable (OSC 8) | No associated PR |
+| `worktree` | Active git worktree name | Not in a worktree |
+| `thinking` | Thinking indicator | Thinking not enabled |
+| `outputStyle` | Output style name (`concise`) | Absent |
+| `agent` | Active subagent name | No active subagent |
 
-<sub>✎ = not in either preset. Add it via <code>"preset": "custom"</code> in the config file — the
-interactive picker only lists the segments your current preset contains.</sub>
+<sub>The last five aren't in either preset, but the picker lists them like everything else —
+<code>space</code> switches one on.</sub>
 
 The rate-limit countdown runs toward a *reset*, so it never turns red — a small number is good news.
 The usage `%` beside it is the part that warns you.
@@ -260,16 +258,14 @@ Yes — the `fiveHour` and `weekly` segments show the reset countdown and the pe
 only reports rate limits on Pro and Max plans, so on other plans those segments stay hidden.
 
 **Does it work on Windows?**
-Yes — Windows, WSL, macOS and Linux, on Node 22 and 24. CI runs the full suite on all three operating
-systems.
+Yes — Windows, WSL, macOS and Linux, on Node 22 and 24. CI runs the full suite on all three.
 
 **How is this different from a shell script with `jq`?**
 A typical bash status line spawns `jq` once per field — around twenty processes on every render.
 ccbrief is a single Node process that parses the session JSON once, with zero runtime dependencies.
 
 **Can I choose which segments to show?**
-Run `npx ccbrief config` for an interactive picker with a live preview, or edit
-`~/.claude/ccbrief/config.json` directly. Seventeen segments are available; see
+Run `npx ccbrief config`. All fifteen segments are listed with a live preview — see
 [Segments](#segments).
 
 ---

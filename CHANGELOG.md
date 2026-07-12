@@ -6,7 +6,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- **`uninstall` works when nothing is there to answer its question.** Its prompt
+  never settled at end-of-input — a pipe, a CI runner, `< /dev/null` — so the
+  process aborted with exit 13. And because it asked *before* restoring
+  `settings.json`, a scripted uninstall removed **nothing at all** while looking
+  like it had run. With no terminal there is nobody to give consent, so none is
+  inferred: it takes the safe default, restores your settings, and leaves the
+  renderer folder alone. `init` was reachable the same way and now declines,
+  out loud, to replace a `statusLine` it did not install.
+- **`uninstall` no longer crashes when there is nothing to uninstall.** If the
+  Claude config directory did not exist — a fresh machine, a custom
+  `CLAUDE_CONFIG_DIR`, a folder deleted by hand — it died on an unguarded
+  directory read and left a raw Node stack trace as the last thing a departing
+  user ever saw. It now says "nothing to undo" and exits cleanly.
+- **The git cache could report the wrong branch.** It was keyed on the session
+  alone, so the second directory a session rendered — `/add-dir`, a `cd`, a
+  worktree — was served the *first* directory's branch for the next three
+  seconds. The key is now the session **and** the directory.
+- **The git cache has moved out of the shared system temp directory** into your
+  own `~/.claude/ccbrief/cache/`. A predictable, world-writable path that ccbrief
+  both read and wrote on every render had no business being outside your home
+  directory. A cached timestamp from the future is also no longer trusted.
+- **A typo'd command now fails.** `ccbrief instal` printed the help and exited
+  **0**, so it looked like it had worked and any script checking the exit code was
+  told so. Unknown commands go to stderr and exit non-zero. `--help` / `-h` are
+  now real, documented commands rather than an accident of the fallthrough.
+
 ### Added
+- **The config picker can now ADD segments, not just remove them.** It listed only
+  the segments your preset already contained, which made five of them — `pr`,
+  `worktree`, `thinking`, `outputStyle`, `agent` — reachable *only* by hand-writing
+  JSON you had to already know existed. The picker now lists the whole catalog:
+  what's on, in the order it renders, then everything else, one `space` from on.
+- **`config` says what it did.** Saving printed nothing at all, so a save and a
+  discard looked identical — the screen cleared and the shell prompt came back
+  either way. It now confirms the save, shows the preview, and names the config
+  file. Quitting says that nothing was saved.
+- **`config` before `init` no longer strands you.** It would happily write a config
+  for a status line that was never installed, sync nothing, and say nothing — so
+  you could tune a status line that was never going to appear. It now tells you
+  ccbrief isn't installed and names the command that fixes it.
 - **`init` now tells you what to do next.** It used to print a preview and stop,
   leaving the one question a first-time user actually has — "…and now what?" —
   unanswered. It now closes with the preview, the fact that the status line is
@@ -27,7 +67,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **FAQ** in the README, covering the questions people actually arrive with —
   chiefly why the context percentage disappears after `/compact`.
 
+### Removed
+- **The `duration` and `remaining` segments are gone.** `remaining` was `context`
+  subtracted from 100 and printed again in words; `duration` was a wall-clock that
+  ticks whether or not you are working. Neither was in a preset, and neither earned
+  a column. A config still naming them keeps working — the ids are ignored, not
+  fatal.
+
 ### Changed
+- **A named preset no longer writes a `segments` list into `config.json`.** A preset
+  derives its own list, so a list written beside `"preset": "standard"` was read by
+  nobody: it looked editable and wasn't. `segments` now appears only under
+  `"preset": "custom"`, the one case that reads it.
+- **The picker's keymap is two lines**, because one ran to 108 columns and wrapped
+  on any terminal narrower than that.
 - **`standard` is the default preset**, not `detailed`. The promise is a *minimal*
   status line, and ten segments on first run read as noise before they read as
   information. `detailed` is one `p` keypress away in the picker. Existing configs

@@ -41,9 +41,21 @@ test('refreshIntervalFor', () => {
 })
 // A fresh install lands on `standard`: minimal is the promise, and `detailed` is one
 // keypress away in the picker.
-test('DEFAULT_CONFIG is the standard preset', () => {
+test('DEFAULT_CONFIG is the standard preset, and writes no inert segment list', () => {
   assert.equal(DEFAULT_CONFIG.preset, 'standard')
-  assert.deepEqual(DEFAULT_CONFIG.segments.map((s) => s.id), PRESETS.standard)
+  // A named preset DERIVES its segments on load, so a list written beside it in the
+  // file would be read by nobody — an editable-looking dead end. Only `custom` gets one.
+  assert.equal('segments' in DEFAULT_CONFIG, false)
+  assert.deepEqual(loadConfig(DEFAULT_CONFIG).segments.map((s) => s.id), PRESETS.standard)
+})
+
+// `duration` and `remaining` shipped in earlier versions. A config still naming them
+// must keep working — the ids are dropped, not thrown over.
+test('a config naming a removed segment drops it instead of crashing', () => {
+  const c = loadConfig({ preset: 'custom', segments: [
+    { id: 'duration', enabled: true }, { id: 'remaining', enabled: true }, { id: 'model', enabled: true },
+  ] })
+  assert.deepEqual(c.segments.map((s) => s.id), ['model'])
 })
 
 // `glyphs` was renamed to `symbols`. A config written by an older version must keep

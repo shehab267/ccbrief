@@ -3,7 +3,8 @@
 // cache would never hit. `run` is an injectable spawn seam: tests force a
 // cache hit/miss without real timing, and it keeps the render path cross-platform.
 import { execFileSync } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 
 const CACHE_TTL_MS = 3_000
@@ -17,10 +18,23 @@ const CACHE_TTL_MS = 3_000
 const defaultRun = (file, args, opts) =>
   execFileSync(file, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 3_000, maxBuffer: 10 * 1024 * 1024, ...opts })
 
-// Cache filename must be stable per session yet confined to cacheDir — a
-// session_id carrying path separators must not escape it. Reduce to a safe token.
-export function gitCacheName(sid) {
-  return `git-${String(sid ?? 'default').replace(/[^A-Za-z0-9_-]/g, '_')}.json`
+// The cache key is the session AND the directory the entry describes.
+//
+// It used to be the session alone. Two bad things followed. A session that renders
+// more than one directory — /add-dir, a cd, a worktree — was served the FIRST
+// directory's branch for the next three seconds, so the status line got its one job
+// wrong. And with no session_id the name collapsed to a fixed `git-default.json`;
+// in the shared system temp dir that older versions used, that is a predictable,
+// world-writable path any local process could plant or point elsewhere by symlink.
+// Hashing the directory into the name fixes the first. The cache moving under the
+// user's own ccbrief dir (statusline.js) fixes the second.
+//
+// The session part is still reduced to a safe token: a session_id carrying path
+// separators must not escape cacheDir.
+export function gitCacheName(sid, cwd = '') {
+  const session = String(sid ?? 'default').replace(/[^A-Za-z0-9_-]/g, '_')
+  const where = createHash('sha256').update(String(cwd)).digest('hex').slice(0, 12)
+  return `git-${session}-${where}.json`
 }
 
 export function collectGit(input, { cacheDir, sessionId, run = defaultRun, now = Date.now } = {}) {
@@ -28,11 +42,15 @@ export function collectGit(input, { cacheDir, sessionId, run = defaultRun, now =
   const sid = sessionId ?? input?.session_id ?? 'default'
   if (!cwd) return null
 
-  const cacheFile = cacheDir ? join(cacheDir, gitCacheName(sid)) : null
+  const cacheFile = cacheDir ? join(cacheDir, gitCacheName(sid, cwd)) : null
   if (cacheFile) {
     try {
       const cached = JSON.parse(readFileSync(cacheFile, 'utf8'))
-      if (now() - cached.at < CACHE_TTL_MS) return cached.value
+      const age = now() - cached.at
+      // `age >= 0` matters: a timestamp in the future — clock skew, or a file someone
+      // else wrote — would otherwise read as fresh forever and pin the status line to
+      // a stale branch for the rest of the session.
+      if (age >= 0 && age < CACHE_TTL_MS) return cached.value
     } catch { /* miss → fall through */ }
   }
 
@@ -54,7 +72,13 @@ export function collectGit(input, { cacheDir, sessionId, run = defaultRun, now =
   }
 
   if (cacheFile) {
-    try { writeFileSync(cacheFile, JSON.stringify({ at: now(), value })) } catch { /* best-effort */ }
+    // Best-effort throughout: a read-only home, a full disk, a racing sibling render —
+    // none of it is worth a blank status line, so a failed cache write just means the
+    // next render runs git again.
+    try {
+      mkdirSync(cacheDir, { recursive: true })
+      writeFileSync(cacheFile, JSON.stringify({ at: now(), value }))
+    } catch { /* best-effort */ }
   }
   return value
 }

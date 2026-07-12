@@ -6,6 +6,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { build } from 'esbuild'
+import { execFileSync, spawnSync } from 'node:child_process'
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 // Bare specifiers that aren't relative (./ ../), absolute (/), or node: builtins
 // are external runtime deps — exactly what must not appear in the shipped bundle.
@@ -19,11 +23,42 @@ function externalSpecifiers(code) {
   return [...specs]
 }
 
+const bundle = () => build({
+  entryPoints: ['src/statusline.js'],
+  bundle: true, platform: 'node', target: 'node22', format: 'esm', write: false,
+})
+
 test('bundled renderer is self-contained (zero runtime deps)', async () => {
-  const out = await build({
-    entryPoints: ['src/statusline.js'],
-    bundle: true, platform: 'node', target: 'node22', format: 'esm', write: false,
-  })
+  const out = await bundle()
   const specs = externalSpecifiers(out.outputFiles[0].text)
   assert.deepEqual(specs, [], `bundle must inline all deps; found external imports: ${specs.join(', ')}`)
+})
+
+// Static analysis proves nothing about whether the thing RUNS. Every other test
+// exercises src/, but `init` ships dist/ — so a builtin that fails to bundle would
+// throw at module load, and because statusline.js swallows everything to protect
+// Claude's UI, the whole line would just go quietly blank in production with the
+// suite still green. Execute the bundle for real, against a real repo.
+test('the bundled renderer actually runs, and renders a branch', async () => {
+  const out = await bundle()
+  const home = mkdtempSync(join(tmpdir(), 'ccbrief-bundle-'))
+  const script = join(home, 'statusline.js')
+  writeFileSync(script, out.outputFiles[0].text)
+
+  const repo = mkdtempSync(join(tmpdir(), 'ccbrief-bundle-repo-'))
+  const git = (...a) => execFileSync('git', a, { cwd: repo, stdio: 'pipe' })
+  git('init', '-b', 'main')
+  git('config', 'user.email', 't@t.dev')
+  git('config', 'user.name', 'T')
+  writeFileSync(join(repo, 'a.txt'), 'one\n')
+  git('add', 'a.txt'); git('commit', '-m', 'init')
+
+  const r = spawnSync(process.execPath, [script], {
+    input: JSON.stringify({ session_id: 'b1', workspace: { current_dir: repo }, model: { display_name: 'Opus' } }),
+    encoding: 'utf8',
+    env: { ...process.env, CLAUDE_CONFIG_DIR: home, COLUMNS: '120' },
+  })
+  assert.equal(r.status, 0, r.stderr)
+  assert.match(r.stdout, /main/, `bundle rendered nothing: ${JSON.stringify(r.stdout)}`)
+  assert.match(r.stdout, /Opus/)
 })

@@ -5,7 +5,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { render } from '../render.js'
-import { initialState, reduce, stateToConfig } from './state.js'
+import { initialState, reduce, stateToConfig, configToFile } from './state.js'
 import { refreshIntervalFor, loadConfig } from '../config.js'
 import { optionsFor, BY_ID } from '../segments/index.js'
 import { ccbriefDir } from '../paths.js'
@@ -36,13 +36,20 @@ export function renderPanel(state, ctx = { columns: 80 }) {
   // listed here — they get a dedicated plain-language tip (optionHint) shown only
   // while a limit row is focused, which reads as guidance instead of one more
   // cryptic key token crammed into this line.
+  const on = state.segments.filter((s) => s.enabled).length
+  const rule = (label) => `${label} ${'─'.repeat(Math.max(0, ctx.columns - label.length - 1))}`
   return [
     `ccbrief · configuration                 preset: ${state.preset}`,
     `symbols: ${state.symbols} (${SYMBOL_NOTES[state.symbols] ?? ''})   colors: ${state.colors ? 'on' : 'off'}   icons: ${state.icons ? 'on' : 'off'}   layout: ${state.layout}`,
-    `Preview ${'─'.repeat(Math.max(0, ctx.columns - 8))}`,
+    // Two keymap lines, because one ran to 108 columns and wrapped on any terminal
+    // narrower than that — a keymap that wraps is a keymap you read twice.
+    `[space] show/hide   [↑↓] move   [←→] reorder   [↵] save   [esc] quit`,
+    `[p] preset  [y] symbols  [c] colors  [i] icons  [l] layout`,
+    rule('Preview'),
     ` ${preview}`,
-    '─'.repeat(ctx.columns),
-    `[space] toggle  [↑↓] move  [←→] reorder  [p] preset  [y] symbols  [c] colors  [i] icons  [l] layout  [↵/s] save  [esc/q] quit`,
+    // The count heads the list, and it is the line that says the list below is the
+    // WHOLE catalog — that the unticked rows are an offer, not leftovers.
+    rule(`Segments — ${on} of ${state.segments.length} shown`),
   ].join('\n')
 }
 
@@ -84,7 +91,10 @@ export function optionHint(focusedId) {
 export function saveConfig(state, dir = ccbriefDir()) {
   const config = stateToConfig(state)
   mkdirSync(dir, { recursive: true })
-  writeFileSync(join(dir, 'config.json'), JSON.stringify(config, null, 2) + '\n')
+  // configToFile trims the segment list under a named preset (see state.js) — the
+  // file stays honest about what it actually reads. The FULL config is what we
+  // return, because the caller re-syncs settings.json from it.
+  writeFileSync(join(dir, 'config.json'), JSON.stringify(configToFile(config), null, 2) + '\n')
   return { config, refreshInterval: refreshIntervalFor(config) }
 }
 
@@ -103,9 +113,12 @@ export async function runConfigTui({ dir = ccbriefDir(), initialConfig, input = 
   let cursor = 0
   const columns = Number(process.env.COLUMNS) || 80
 
+  // The panel's last line is the `Segments —` rule, so the list follows it directly:
+  // one blank line there would push the whole screen past 24 rows, and the rule
+  // already does the separating.
   const paint = () => {
     const hint = optionHint(state.segments[cursor]?.id)
-    const body = renderPanel(state, { columns }) + '\n\n' + renderMarks(state, cursor) + (hint ? `\n\n  ${hint}` : '')
+    const body = renderPanel(state, { columns }) + '\n' + renderMarks(state, cursor) + (hint ? `\n\n  ${hint}` : '')
     output.write('\x1b[2J\x1b[H' + body + '\n')
   }
   paint()
@@ -116,7 +129,15 @@ export async function runConfigTui({ dir = ccbriefDir(), initialConfig, input = 
   input.setEncoding('utf8')
 
   return new Promise((resolve) => {
-    const done = (config) => { input.setRawMode(false); input.pause(); resolve(config) }
+    // Clear on the way out so the caller's "saved" / "nothing saved" line lands on a
+    // clean screen instead of being buried under the last painted frame — which is
+    // what made saving and quitting look identical.
+    const done = (config) => {
+      input.setRawMode(false)
+      input.pause()
+      output.write('\x1b[2J\x1b[H')
+      resolve(config)
+    }
     input.on('data', (key) => {
       const seg = state.segments[cursor]
       const id = seg?.id
