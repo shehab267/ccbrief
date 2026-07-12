@@ -7,8 +7,8 @@
 import { render } from './render.js'
 import { collectGit } from './git.js'
 import { loadConfig } from './config.js'
-import { readConfigFile } from './paths.js'
-import { tmpdir } from 'node:os'
+import { readConfigFile, ccbriefDir } from './paths.js'
+import { join } from 'node:path'
 
 function readStdin() {
   return new Promise((resolve) => {
@@ -25,7 +25,11 @@ try {
   const raw = await readStdin()
   const input = JSON.parse(raw || '{}')
   input.now = Date.now() // injected so rate-limit countdowns tick each render
-  input.git = collectGit(input, { cacheDir: tmpdir(), sessionId: input.session_id })
+  // The git cache lives under the user's own ccbrief dir, not the system temp dir.
+  // Temp is shared and world-writable, so the old path was one any local process could
+  // read, plant, or symlink — for a file we then read AND write on every render. This
+  // is a cache; it has no business being anywhere but the user's own directory.
+  input.git = collectGit(input, { cacheDir: join(ccbriefDir(), 'cache'), sessionId: input.session_id })
   const config = loadConfig(readConfigFile())
   const columns = Number(process.env.COLUMNS) || 80 // captured output → no TTY; read COLUMNS
   process.stdout.write(render(input, config, { columns }))
