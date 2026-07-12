@@ -1,18 +1,28 @@
-# ccbrief
+# ccbrief — a minimal status line for Claude Code
 
-A minimal, configurable **status line for [Claude Code](https://claude.com/claude-code)**.
+A minimal, configurable **status line (statusline) for [Claude Code](https://claude.com/claude-code)** —
+your context window, tokens, session cost and rate-limit usage, at a glance in your terminal.
 
 [![CI](https://github.com/shehab267/ccbrief/actions/workflows/ci.yml/badge.svg)](https://github.com/shehab267/ccbrief/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/ccbrief.svg)](https://www.npmjs.com/package/ccbrief)
 [![node](https://img.shields.io/node/v/ccbrief.svg)](https://nodejs.org)
 [![license](https://img.shields.io/npm/l/ccbrief.svg)](./LICENSE)
 
+![The ccbrief status line for Claude Code, showing directory, git branch, lines changed, context-window
+usage with a bar, tokens, session cost, 5-hour and weekly rate-limit resets, reasoning effort and the
+active model — the same line rendered on a dark and a light terminal theme.](https://raw.githubusercontent.com/shehab267/ccbrief/main/assets/ccbrief-claude-code-statusline.png)
+
 ```
 ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │ wk 3d 4h · 62% │ high │ Opus
 ```
 
-<sub>Examples here are shown without color. In your terminal, each field carries its own color — see
-<a href="#colors-and-glyphs">Colors and glyphs</a>.</sub>
+<sub>That's one line, shown above on two terminal themes. ccbrief's colors are ANSI <em>palette
+slots</em>, not hard-coded RGB, so your terminal resolves them against its own background and the line
+stays readable on dark and light alike — see <a href="#colors-and-glyphs">Colors and glyphs</a>.</sub>
+
+```sh
+npx ccbrief init
+```
 
 > **Not affiliated with, or endorsed by, Anthropic.** ccbrief is an independent, open-source project
 > that reads the data Claude Code already exposes. No network calls, no telemetry.
@@ -216,11 +226,42 @@ is on.
 
 ---
 
+## FAQ
+
+**How do I add a status line to Claude Code?**
+Run `npx ccbrief init`. It writes the renderer to `~/.claude/ccbrief/` and merges a `statusLine` block
+into your `settings.json`, backing the file up first. Claude Code picks it up on the next render.
+
+**Why did my context percentage disappear?**
+Because Claude Code hasn't reported one yet. `used_percentage` is null early in a session and right
+after `/compact`, so ccbrief hides the segment rather than printing a `0%` it would have to invent.
+It comes back on the next response.
+
+**Can I see my 5-hour and weekly rate limits?**
+Yes — the `fiveHour` and `weekly` segments show the reset countdown and the percent used. Claude Code
+only reports rate limits on Pro and Max plans, so on other plans those segments stay hidden.
+
+**Does it work on Windows?**
+Yes — Windows, WSL, macOS and Linux, on Node 22 and 24. CI runs the full suite on all three operating
+systems.
+
+**How is this different from a shell script with `jq`?**
+A typical bash status line spawns `jq` once per field — around twenty processes on every render.
+ccbrief is a single Node process that parses the session JSON once, with zero runtime dependencies.
+
+**Can I choose which segments to show?**
+Run `npx ccbrief config` for an interactive picker with a live preview, or edit
+`~/.claude/ccbrief/config.json` directly. Seventeen segments are available; see
+[Segments](#segments).
+
+---
+
 ## Development
 
 ```sh
 npm test           # node --test
 npm run build      # bundle the renderer → dist/statusline.js
+npm run demo       # regenerate the README images from the real renderer
 ```
 
 Changes are logged in [CHANGELOG.md](./CHANGELOG.md). Security policy and private vulnerability

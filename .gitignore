@@ -147,3 +147,8 @@ docs/
 
 # Build output (bundled at publish time via esbuild)
 dist/
+
+# Intermediate markup for the README images. `npm run demo` regenerates it from
+# the real renderer; only the PNGs it produces are committed.
+assets/*.html
+.playwright-mcp/
