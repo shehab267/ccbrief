@@ -45,10 +45,10 @@
     "prepublishOnly": "npm test"
   },
   "dependencies": {
-    "string-width": "^7.2.0"
+    "string-width": "^8.2.2"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.28.1"
   },
   "engines": {
     "node": ">=22"
