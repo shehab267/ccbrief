@@ -62,6 +62,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **`esc` quits the config TUI**, alongside `q`.
 
 ### Fixed
+- **Truncating a segment never severs an escape sequence.** Truncation walked one
+  code point at a time, so a cut could land inside a color code or an OSC 8
+  hyperlink — and an unterminated sequence does not stop at the status line: a
+  dangling `\x1b[36m` leaves the rest of the terminal cyan, and a cut hyperlink
+  terminator turns the rest of the screen into a link. Now escapes are copied
+  whole, only visible graphemes are measured against the width budget (so a ZWJ
+  emoji is never split either), and anything still open at the cut is closed.
+- **`--version` and `--help` report the real package version.** Both had it
+  hardcoded, so they would have drifted from `package.json` at the first bump —
+  and the help text still announced "under development". The version is now read
+  from `package.json`, which is the single source of truth.
 - **Icons are no longer double-spaced from the values they label.** An emoji is
   double-width, so the terminal already reserves a trailing column its artwork
   doesn't fill — and every segment was appending a space on top of that. Emoji
