@@ -9,11 +9,14 @@ import { layout } from './layout.js'
 export function render(input, config, ctx = {}) {
   const theme = makeTheme(config)
   const parts = []
-  for (const { id, enabled } of config.segments ?? []) {
-    if (!enabled) continue
-    const seg = BY_ID[id]
+  for (const entry of config.segments ?? []) {
+    if (!entry.enabled) continue
+    const seg = BY_ID[entry.id]
     if (!seg || !seg.isAvailable(input)) continue
-    const text = seg.format(input, theme)
+    // The whole entry is passed so option-bearing segments (the rate-limit
+    // windows read showTime/showPercent) can self-configure; every other
+    // segment ignores the third argument, so nothing else changes.
+    const text = seg.format(input, theme, entry)
     if (text) parts.push(text) // '' from a segment is treated as hidden
   }
   const columns = ctx.columns ?? 80

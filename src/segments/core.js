@@ -1,13 +1,21 @@
 // Core segments. Each segment is a pure { id, section, isAvailable, format } object.
 // `repo` (Task 5) and `context` (Task 6) are appended to this file as they land.
 import { clean } from '../format.js'
+import { optionDefaults } from './options.js'
 const basename = (p) => String(p ?? '').split(/[\\/]/).filter(Boolean).pop() ?? ''
+// Default visibility of the repo diff, from the single source of truth (options.js)
+// so it can't drift from what withOptions writes into the config entry.
+const REPO_DEFAULTS = optionDefaults('repo')
 
+// Each field wears its own hue, so the eye finds "where am I" by colour rather
+// than by counting separators. Cyan for the two "which environment" fields —
+// directory and model — bold on the model to separate the pair without reaching
+// for a bright slot.
 export const directory = {
   id: 'directory',
   section: 'core',
   isAvailable: (input) => Boolean(input?.workspace?.current_dir),
-  format: (input) => clean(basename(input.workspace.current_dir)),
+  format: (input, theme) => theme.color('cyan', clean(basename(input.workspace.current_dir))),
 }
 
 export const model = {
@@ -15,8 +23,7 @@ export const model = {
   section: 'core',
   isAvailable: (input) => Boolean(input?.model?.display_name),
   format: (input, theme) => {
-    const glyph = theme.glyph('model')
-    return `${glyph ? glyph + ' ' : ''}${clean(input.model.display_name)}`
+    return `${theme.icon('model')}${theme.color('cyanBold', clean(input.model.display_name))}`
   },
 }
 
@@ -24,13 +31,18 @@ export const repo = {
   id: 'repo',
   section: 'core',
   isAvailable: (input) => Boolean(input?.git),
-  format: (input, theme) => {
+  format: (input, theme, entry) => {
     const name = clean(input.workspace?.repo?.name ?? basename(input.workspace?.current_dir))
     const branch = clean(input.git.branch)
+    // Green glyph, plain-foreground name: the branch is the one field that is
+    // pure identity, so it reads at the default foreground while its marker
+    // carries the colour.
+    const head = `${theme.icon('branch', 'green')}${theme.primary(`${name}/${branch}`)}`
+    // `+N/-M` is the git working-tree diff vs HEAD. Independently toggleable
+    // (showDiff) so the branch can stand alone; still hidden when the tree is clean.
+    const showDiff = entry?.showDiff ?? REPO_DEFAULTS.showDiff
     const { added, removed } = input.git
-    const glyph = theme.glyph('branch')
-    const head = `${glyph ? glyph + ' ' : ''}${name}/${branch}`
-    if (!added && !removed) return head
+    if (!showDiff || (!added && !removed)) return head
     return `${head} ${theme.color('green', `+${added}`)}/${theme.color('red', `-${removed}`)}`
   },
 }
@@ -43,7 +55,13 @@ export const context = {
   isAvailable: (input) => input?.context_window?.used_percentage != null,
   format: (input, theme) => {
     const pct = Math.round(input.context_window.used_percentage)
+    // The number and the bar carry DIFFERENT things. The number is flat magenta —
+    // it is the context field's identity hue, and it stays put so the eye can
+    // find it. The bar alone ramps green → yellow → red with the fill, because
+    // the bar is the part that means "how full". Colouring both by the threshold
+    // (as this once did) says the same thing twice and leaves the segment with no
+    // stable colour to recognise it by.
     const tone = pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green'
-    return `${theme.color(tone, `${pct}%`)} ${theme.bar(pct)}`
+    return `${theme.color('magenta', `${pct}%`)} ${theme.bar(pct, 9, tone)}`
   },
 }

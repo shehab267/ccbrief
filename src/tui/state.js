@@ -2,6 +2,7 @@
 // (tui/index.js) is the only impure part; all state transitions live here so
 // they're deterministic and unit-tested.
 import { PRESETS } from '../config.js'
+import { optionsFor, optionDefaults } from '../segments/index.js'
 
 export function initialState(config) {
   return { ...config, segments: config.segments.map((s) => ({ ...s })) }
@@ -26,8 +27,14 @@ export function reduce(state, action) {
     }
     case 'preset': {
       if (action.preset === 'custom') return { ...state, preset: 'custom' }
-      const segments = PRESETS[action.preset].map((id) => ({ id, enabled: true }))
+      // Re-inject each segment's declared toggle defaults so switching presets
+      // doesn't strip them (they'd otherwise vanish until the next config reload).
+      const segments = PRESETS[action.preset].map((id) => ({ id, enabled: true, ...optionDefaults(id) }))
       return { ...state, preset: action.preset, segments }
+    }
+    case 'setOption': {
+      const segments = state.segments.map((s) => (s.id === action.id ? { ...s, [action.key]: action.value } : s))
+      return { ...state, segments, preset: toCustom(state) }
     }
     case 'set':
       return { ...state, [action.key]: action.value, preset: toCustom(state) }
@@ -45,6 +52,15 @@ export function stateToConfig(state) {
     glyphs: state.glyphs,
     colors: state.colors,
     icons: state.icons,
-    segments: state.segments.map((s) => ({ id: s.id, enabled: s.enabled })),
+    segments: state.segments.map((s) => {
+      // Preserve each segment's declared toggles; segments that declare none carry
+      // nothing, so the round-trip stays exact (loadConfig re-derives the identical
+      // entry via the same registry).
+      const entry = { id: s.id, enabled: s.enabled }
+      for (const o of optionsFor(s.id)) {
+        if (typeof s[o.key] === 'boolean') entry[o.key] = s[o.key]
+      }
+      return entry
+    }),
   }
 }

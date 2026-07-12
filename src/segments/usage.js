@@ -1,6 +1,7 @@
 // Usage segments: token counts, remaining %, duration, cost, and the Pro/Max
 // rate-limit windows. Each hides when its source field is null/absent.
 import { formatDuration, formatCountdown, formatTokens } from '../format.js'
+import { optionDefaults } from './options.js'
 
 export const tokens = {
   id: 'tokens', section: 'usage',
@@ -8,45 +9,104 @@ export const tokens = {
   // context counts). Null before the first API call / post-/compact → hide.
   isAvailable: (input) =>
     input?.context_window?.total_input_tokens != null || input?.context_window?.total_output_tokens != null,
-  format: (input) => {
+  format: (input, theme) => {
     const cw = input.context_window
-    return formatTokens((Number(cw.total_input_tokens) || 0) + (Number(cw.total_output_tokens) || 0))
+    const n = formatTokens((Number(cw.total_input_tokens) || 0) + (Number(cw.total_output_tokens) || 0))
+    // Yellow is the tokens field's identity hue — it does not vary with the
+    // count. There is no "too many tokens" threshold to warn about here (the
+    // context gauge already owns that signal), so this is a label, not a gauge.
+    return `${theme.icon('tokens')}${theme.color('yellow', n)}`
   },
 }
 
 export const remaining = {
   id: 'remaining', section: 'usage',
   isAvailable: (input) => input?.context_window?.remaining_percentage != null,
-  format: (input) => `${Math.round(input.context_window.remaining_percentage)}% left`,
+  format: (input, theme) => theme.primary(`${Math.round(input.context_window.remaining_percentage)}% left`),
 }
 
 export const duration = {
   id: 'duration', section: 'usage',
   isAvailable: (input) => input?.cost?.total_duration_ms != null,
-  format: (input, theme) => `${theme.glyph('duration') ? theme.glyph('duration') + ' ' : ''}${formatDuration(input.cost.total_duration_ms)}`,
+  format: (input, theme) => `${theme.icon('duration')}${theme.primary(formatDuration(input.cost.total_duration_ms))}`,
 }
 
 export const cost = {
   id: 'cost', section: 'usage',
   isAvailable: (input) => input?.cost?.total_cost_usd != null,
-  format: (input) => `$${Number(input.cost.total_cost_usd).toFixed(2)}`,
+  format: (input, theme) => theme.primary(`$${Number(input.cost.total_cost_usd).toFixed(2)}`),
 }
 
-// Rate-limit windows (Pro/Max only). Countdown is computed locally from
-// input.now each render; a passed reset shows `reset due`, never 0%.
-function limit(label, key) {
+// The two independent toggles' defaults now live in the segment-options registry
+// (segments/options.js: fiveHour = time-only, weekly = time + percent), so config,
+// the TUI, and this format share one source of truth.
+
+// The countdown is GREEN, always — it has no urgency ramp, and that is the point.
+//
+// It counts down to the moment your quota RESETS, so a small number is good news,
+// not bad. The old ramp (neutral → yellow → orange as the reset neared) inverted
+// that: it painted approaching relief as approaching danger. The urgency signal
+// for this window already exists and lives next door — `used_percentage`, which
+// keeps its green/yellow/red ramp below. So the countdown is free to be a calm,
+// stable field marker, and green is its identity hue.
+
+// Percent tone, by USAGE — the same green/yellow/red thresholds the context bar
+// uses, so one mental model (green plenty → red nearly full) spans the line. This
+// is the only place in the rate-limit window where colour means "state".
+const usageTone = (pct) => (pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green')
+
+// Rate-limit windows (Pro/Max only, and absent until the first API response).
+// One segment renders up to two independently-toggled parts — countdown and
+// used-% — so the layout engine never places a separator *inside* a window
+// (percent and time cannot be separate segments: layout.js joins segments with
+// its own `│`). Each part also hides when its own source is null, so we never
+// fabricate a 0% or a NaN countdown. Both parts off, or both sources null → ''
+// → render() treats it as hidden, leaving no stray separator.
+function limit(id, key) {
+  // Hoisted: these are constants, and format() runs on every render. (core.js does
+  // the same for REPO_DEFAULTS — keep the two files agreeing on the idiom.)
+  const D = optionDefaults(id)
+  // The head of the window: its marker plus the gap before the first value.
+  //
+  // Session wears the ⧗/⏳ timer in the countdown's green, so glyph and digits read
+  // as one object. When the glyph resolves empty (ascii mode OR icons-off) it falls
+  // back to `S`, so a bare countdown is never anonymous. Weekly wears a literal
+  // `wk` — a label, not a glyph, so it survives every mode and stays chrome-dim.
+  //
+  // `wk` and `S` are WORDS: they always take a space. Only a real glyph goes
+  // through theme.icon(), which knows a double-width emoji already brings its own.
+  const head = (theme) => {
+    if (id === 'weekly') return theme.secondary('wk') + ' '
+    return theme.glyph('reset') ? theme.icon('reset', 'green') : theme.color('green', 'S') + ' '
+  }
   return {
-    id: key === 'five_hour' ? 'fiveHour' : 'weekly', section: 'usage',
-    isAvailable: (input) => input?.rate_limits?.[key]?.used_percentage != null,
-    format: (input) => {
+    id, section: 'usage',
+    isAvailable: (input) => {
+      const rl = input?.rate_limits?.[key]
+      return rl != null && (rl.used_percentage != null || rl.resets_at != null)
+    },
+    format: (input, theme, entry) => {
       const rl = input.rate_limits[key]
-      const pct = Math.round(rl.used_percentage)
-      // resets_at is Unix epoch SECONDS; input.now is Date.now() ms → convert before diffing.
-      const tail = rl.resets_at != null ? ` · ${formatCountdown(rl.resets_at * 1000 - input.now)}` : ''
-      return `${label} ${pct}%${tail}`
+      const showTime = entry?.showTime ?? D.showTime
+      const showPercent = entry?.showPercent ?? D.showPercent
+      const parts = []
+      if (showTime && rl.resets_at != null) {
+        // resets_at is Unix epoch SECONDS; input.now is Date.now() ms → convert before diffing.
+        const ms = rl.resets_at * 1000 - input.now
+        parts.push(theme.color('green', formatCountdown(ms)))
+      }
+      if (showPercent && rl.used_percentage != null) {
+        const pct = Math.round(rl.used_percentage)
+        parts.push(theme.color(usageTone(pct), `${pct}%`))
+      }
+      if (parts.length === 0) return ''
+      // The ` · ` between parts is chrome, not state, so it's dimmed like the
+      // other separators — otherwise it sits outside every SGR and glares white
+      // on a dark theme while its neighbours recede. (Plain when colors are off.)
+      return `${head(theme)}${parts.join(theme.color('dim', ' · '))}`
     },
   }
 }
 
-export const fiveHour = limit('5h', 'five_hour')
-export const weekly = limit('7d', 'seven_day')
+export const fiveHour = limit('fiveHour', 'five_hour')
+export const weekly = limit('weekly', 'seven_day')

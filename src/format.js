@@ -24,12 +24,16 @@ export function formatDuration(ms) {
 }
 
 // Countdown to a rate-limit reset. Once the timestamp has passed we show
-// `reset due` rather than fabricating a 0% / negative time.
+// `reset due` rather than fabricating a 0% / negative time. The weekly window
+// can be days out, so a day unit is required — otherwise `3d 4h` renders as a
+// nonsensical `76h 0m`. Above a day we drop minutes (nobody needs `3d 4h 12m`).
 export function formatCountdown(ms) {
   if (ms <= 0) return 'reset due'
   const totalMin = Math.floor(ms / 60_000)
-  const h = Math.floor(totalMin / 60)
+  const d = Math.floor(totalMin / 1440)
+  const h = Math.floor((totalMin % 1440) / 60)
   const m = totalMin % 60
+  if (d > 0) return `${d}d ${h}h`
   return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 

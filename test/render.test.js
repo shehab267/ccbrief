@@ -10,7 +10,8 @@ const cfg = (segments, over = {}) => ({
 
 test('renders enabled+available segments in order', () => {
   const out = render(fx.standard, cfg([{ id: 'repo', enabled: true }, { id: 'context', enabled: true }, { id: 'model', enabled: true }]), { columns: 200 })
-  assert.equal(out, 'ccbrief/main +3/-1 | 42% ####----- | Opus')
+  // repo's working-tree diff is hidden by default (showDiff off) → branch only.
+  assert.equal(out, 'ccbrief/main | 42% ####----- | Opus')
 })
 
 test('unavailable segment (context post-/compact) is omitted', () => {
@@ -20,5 +21,5 @@ test('unavailable segment (context post-/compact) is omitted', () => {
 
 test('disabled segment is omitted', () => {
   const out = render(fx.standard, cfg([{ id: 'repo', enabled: true }, { id: 'model', enabled: false }]), { columns: 200 })
-  assert.equal(out, 'ccbrief/main +3/-1')
+  assert.equal(out, 'ccbrief/main')
 })

@@ -1,23 +1,30 @@
 #!/usr/bin/env node
 // ccbrief CLI — init / config / uninstall.
 import { createInterface } from 'node:readline/promises'
+import { readFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { runInit } from '../src/commands/init.js'
 import { runUninstall } from '../src/commands/uninstall.js'
-import { runConfigTui } from '../src/tui/index.js'
-import { configDir, ccbriefDir, readConfigFile } from '../src/paths.js'
+import { runConfig } from '../src/commands/config.js'
+import { configDir, readConfigFile } from '../src/paths.js'
 
 const [cmd] = process.argv.slice(2)
 
-const HELP = `ccbrief — a minimal, configurable status line for Claude Code
+// The one source of truth for the version is package.json — a hardcoded string
+// here silently drifts the moment it's bumped. Read, not imported: the CLI isn't
+// bundled, and a plain read needs no JSON-import attribute.
+const pkgPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json')
+const { version } = JSON.parse(readFileSync(pkgPath, 'utf8'))
+
+const HELP = `ccbrief v${version} — a minimal, configurable status line for Claude Code
 
 usage:
   ccbrief init        install and wire up the status line
   ccbrief config      open the interactive configuration TUI
   ccbrief uninstall   remove the status line and restore settings
 
-  ccbrief --version   print version
-
-(v0.1.0 — under development)`
+  ccbrief --version   print version`
 
 // Prompt before replacing a statusLine block the user already configured.
 async function confirmReplace(existing) {
@@ -40,11 +47,12 @@ switch (cmd) {
     break
   }
   case 'config':
-    await runConfigTui({ dir: ccbriefDir(), initialConfig: readConfigFile() })
+    // Saving re-syncs settings.json too, so a segment change takes effect immediately.
+    await runConfig({ dir: configDir(), initialConfig: readConfigFile() })
     break
   case '--version':
   case '-v':
-    console.log('0.1.0')
+    console.log(version)
     break
   default:
     console.log(HELP)

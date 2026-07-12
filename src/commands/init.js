@@ -8,13 +8,7 @@ import { commandString } from '../paths.js'
 import { hasStatusLine, patchSettings, backupName, ownsStatusLine } from '../installer.js'
 import { DEFAULT_CONFIG, refreshIntervalFor, loadConfig } from '../config.js'
 import { render } from '../render.js'
-
-// Fixed dummy data for the install preview — never real repo/session info.
-const PREVIEW_INPUT = {
-  now: 0, workspace: { current_dir: '/home/dev/ccbrief', repo: { name: 'ccbrief' } },
-  git: { branch: 'main', added: 3, removed: 1 }, model: { display_name: 'Opus' },
-  context_window: { used_percentage: 42 }, cost: { total_duration_ms: 5_040_000 },
-}
+import { PREVIEW_INPUT } from '../preview.js'
 
 const bundledRenderer = () => join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist', 'statusline.js')
 
@@ -38,13 +32,32 @@ export async function runInit({ dir, copyRenderer, confirm, log, now = Date.now 
   }
 
   mkdirSync(ccbrief, { recursive: true })
-  writeFileSync(join(ccbrief, 'config.json'), JSON.stringify(DEFAULT_CONFIG, null, 2) + '\n')
+
+  // Re-running init is an idempotent repair (relink the renderer, re-patch settings),
+  // not a factory reset: keep a config the user has already tuned. A config that is
+  // missing, unparseable, or not a JSON object (`[]`, `42`, `null`) is not something
+  // to preserve — init is the repair command, so it rewrites those with the defaults.
+  const configPath = join(ccbrief, 'config.json')
+  let saved = null
+  if (existsSync(configPath)) {
+    try {
+      const parsed = JSON.parse(readFileSync(configPath, 'utf8'))
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) saved = parsed
+    } catch { saved = null }
+  }
+  if (!saved) writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2) + '\n')
 
   // Copy the bundled, self-contained renderer (seam lets tests skip the real dist).
   if (copyRenderer) copyRenderer(ccbrief)
   else copyFileSync(bundledRenderer(), join(ccbrief, 'statusline.js'))
 
-  const config = loadConfig(DEFAULT_CONFIG)
+  // Mark the install dir as ESM. Without it node has no package.json context for
+  // the bundle, logs MODULE_TYPELESS_PACKAGE_JSON, and reparses it as ESM on every
+  // spawn (an every-render cost). This pins it so the reparse never happens.
+  writeFileSync(join(ccbrief, 'package.json'), JSON.stringify({ type: 'module' }, null, 2) + '\n')
+
+  // refreshInterval must describe the config we actually kept, not the defaults.
+  const config = loadConfig(saved ?? DEFAULT_CONFIG)
   const command = commandString(ccbrief)
   const refreshInterval = refreshIntervalFor(config)
   writeFileSync(settingsPath, JSON.stringify(patchSettings(existing, { command, refreshInterval }), null, 2) + '\n')

@@ -16,6 +16,9 @@ test('empty dir: writes settings + config, copies renderer', async () => {
   // commandString quotes the path, so the command ends with a closing quote.
   assert.match(settings.statusLine.command, /ccbrief\/statusline\.js"$/)
   assert.ok(existsSync(join(dir, 'ccbrief', 'config.json')))
+  // Marks the install dir as ESM so node doesn't reparse the bundle every render.
+  const pkg = JSON.parse(readFileSync(join(dir, 'ccbrief', 'package.json'), 'utf8'))
+  assert.equal(pkg.type, 'module')
   assert.equal(res.changed, true)
 })
 
@@ -35,6 +38,49 @@ test('pre-existing statusLine: aborts when confirm=false', async () => {
   assert.equal(res.changed, false)
   const settings = JSON.parse(readFileSync(join(dir, 'settings.json'), 'utf8'))
   assert.equal(settings.statusLine.command, 'old') // untouched
+})
+
+// Re-running init is an idempotent repair (relink the renderer, re-patch settings),
+// NOT a factory reset — it must never throw away a config the user has tuned.
+const CUSTOM = {
+  version: 1, preset: 'custom', layout: 'auto', maxRows: 3, glyphs: 'ascii',
+  colors: false, icons: false, segments: [{ id: 'model', enabled: true }],
+}
+
+test('re-init preserves an existing config.json', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccbrief-init-'))
+  await runInit({ dir, ...seams() })
+  writeFileSync(join(dir, 'ccbrief', 'config.json'), JSON.stringify(CUSTOM, null, 2) + '\n')
+  await runInit({ dir, ...seams() })
+  assert.deepEqual(JSON.parse(readFileSync(join(dir, 'ccbrief', 'config.json'), 'utf8')), CUSTOM)
+})
+
+// The kept config also has to drive settings.json, or the refresh rate silently
+// describes the defaults instead of what the user actually configured.
+test('re-init derives refreshInterval from the kept config, not the defaults', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccbrief-init-'))
+  await runInit({ dir, ...seams() })
+  const first = JSON.parse(readFileSync(join(dir, 'settings.json'), 'utf8'))
+  assert.equal(first.statusLine.refreshInterval, 60) // defaults include time-based segments
+
+  writeFileSync(join(dir, 'ccbrief', 'config.json'), JSON.stringify(CUSTOM, null, 2) + '\n')
+  await runInit({ dir, ...seams() })
+  const settings = JSON.parse(readFileSync(join(dir, 'settings.json'), 'utf8'))
+  assert.equal('refreshInterval' in settings.statusLine, false) // CUSTOM has no time-based segment
+})
+
+// `init` is the repair command, so it has to heal a broken config — not just an
+// unparseable one. `[]`/`42`/`"x"` all parse fine yet are not a config; keeping them
+// would leave the repair command staring at garbage it refused to fix.
+test('a corrupt config.json is replaced with the defaults', async () => {
+  for (const junk of ['{ not json', 'null', '[]', '42', '"nope"', 'true']) {
+    const dir = mkdtempSync(join(tmpdir(), 'ccbrief-init-'))
+    await runInit({ dir, ...seams() })
+    writeFileSync(join(dir, 'ccbrief', 'config.json'), junk)
+    await runInit({ dir, ...seams() })
+    const config = JSON.parse(readFileSync(join(dir, 'ccbrief', 'config.json'), 'utf8'))
+    assert.equal(config.preset, 'detailed', `init failed to repair config.json containing ${junk}`)
+  }
 })
 
 test('re-init keeps one pristine backup; uninstall restores pre-ccbrief settings', async () => {
