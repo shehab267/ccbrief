@@ -15,8 +15,8 @@ Node process that turns the session JSON Claude Code hands it into a tidy, color
 ccbrief/main │ 42% ━━━━───── │ ⧗ 2h 0m │ Opus
 ```
 
-<sub>Examples in this README use the default `simple` glyph mode and are shown without color; in your
-terminal the context bar, git diff, and rate-limit warnings are color-coded.</sub>
+<sub>Examples in this README use the default `simple` glyph mode and are shown without color. In your
+terminal each field carries its own color — see <a href="#colors">Colors</a>.</sub>
 
 ---
 
@@ -88,6 +88,9 @@ $1.23 │ ⧗ 2h 0m │ wk 3d 4h · 62% │ high │ Opus
 - **Clickable PRs.** The PR segment links to the pull request via terminal hyperlinks (OSC 8).
 - **Swappable glyphs.** Four modes — `simple` (the default: text and universal symbols, identical on
   every terminal), `emoji`, `nerd-font`, and a pure-ASCII fallback.
+- **Readable on dark *and* light themes.** Colors come from the standard ANSI palette, so your
+  terminal theme resolves them against its own background instead of ccbrief imposing fixed RGB that
+  only suits one. Each field gets its own color; only gauges change color to signal state.
 
 ---
 
@@ -134,11 +137,29 @@ preview shows you before you commit. `ascii` drops to pure `|`/`#` for terminals
 support.
 
 ```
-simple    : ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │ high │ Opus
-emoji     : ccbrief │ 🌿 ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │ ⚡ high │ 🧠 Opus
-nerd-font : ccbrief │  ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │  high │  Opus
-ascii     : ccbrief | ccbrief/main | +120/-34 | 42% ####----- | 128k | $1.23 | S 2h 0m | high | Opus
+simple    : ccbrief │ ccbrief/main +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │ high │ Opus
+emoji     : ccbrief │ 🌿 ccbrief/main +120/-34 │ 42% ━━━━───── │ 🔸 128k │ $1.23 │ ⏳ 2h 0m │ ⚡ high │ 🧠 Opus
+nerd-font : ccbrief │  ccbrief/main +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │  high │  Opus
+ascii     : ccbrief | ccbrief/main +120/-34 | 42% ####----- | 128k | $1.23 | S 2h 0m | high | Opus
 ```
+
+The reset timer is the one glyph that differs by mode on purpose: `emoji` gets ⏳, while every other
+mode keeps ⧗ — a monochrome symbol that ships with every font and is drawn single-width everywhere.
+So the richer glyph is opt-in and no mode ever leaves you with an empty box.
+
+### Colors
+
+**Each field has its own color, so you can find it without reading it** — tokens are yellow, the
+reset timer is green, context is magenta, the model is cyan. Color marks *which field this is*;
+only the context bar and the rate-limit percentage change color to signal *state* (green → yellow →
+red as they fill).
+
+ccbrief paints with the **standard ANSI palette**, never with hard-coded RGB. That means your
+terminal theme resolves every color against its own background, so the line stays readable on a dark
+theme **and** on a light one, and it looks like it belongs in the theme you already chose. Nothing is
+dimmed except the separators — information is never greyed out.
+
+Set `colors: false` (or press `c` in the TUI) to drop every escape code and render plain text.
 
 ---
 
@@ -163,7 +184,7 @@ Every segment hides automatically when its source field is absent, so you only e
 | `remaining` | Context percent remaining (`58% left`) | Null |
 | `duration` | Session wall-clock (`1h 24m`) | Absent |
 | `cost` | Session cost (`$1.23`) | Absent |
-| `fiveHour` | Time until the 5-hour limit resets (`⧗ 2h 0m`); `%` adds usage (`⧗ 2h 0m · 40%`) | Not on Pro/Max |
+| `fiveHour` | Time until the 5-hour limit resets (`⧗ 2h 0m`); `%` adds usage (`⧗ 2h 0m · 40%`). The countdown runs to a *reset*, so it never turns red — the usage `%` is what warns you | Not on Pro/Max |
 | `weekly` | 7-day limit (`wk 3d 4h · 62%`) | Not on Pro/Max |
 
 ### Development
