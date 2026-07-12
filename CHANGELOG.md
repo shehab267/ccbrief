@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- **`uninstall` works when nothing is there to answer its question.** Its prompt
+  never settled at end-of-input — a pipe, a CI runner, `< /dev/null` — so the
+  process aborted with exit 13. And because it asked *before* restoring
+  `settings.json`, a scripted uninstall removed **nothing at all** while looking
+  like it had run. With no terminal there is nobody to give consent, so none is
+  inferred: it takes the safe default, restores your settings, and leaves the
+  renderer folder alone. `init` was reachable the same way and now declines,
+  out loud, to replace a `statusLine` it did not install.
 - **`uninstall` no longer crashes when there is nothing to uninstall.** If the
   Claude config directory did not exist — a fresh machine, a custom
   `CLAUDE_CONFIG_DIR`, a folder deleted by hand — it died on an unguarded

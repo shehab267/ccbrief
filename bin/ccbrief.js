@@ -29,20 +29,27 @@ usage:
   ccbrief --version   print the version
   ccbrief --help      print this`
 
-// Prompt before replacing a statusLine block the user already configured.
-async function confirmReplace(existing) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout })
-  const answer = await rl.question(`A statusLine already exists:\n  ${existing.command}\nReplace it? [y/N] `)
-  rl.close()
-  return /^y(es)?$/i.test(answer.trim())
-}
-
-const ask = async (question) => {
+// A question that cannot hang. readline's question() never settles when stdin is at
+// EOF — a pipe, a CI runner, `< /dev/null` — because readline emits 'close' without
+// ever emitting 'line', so the await dangles and node aborts the process (exit 13).
+// `uninstall` asked its question BEFORE restoring settings.json, so a non-interactive
+// uninstall took nothing off and left the user installed while appearing to have run.
+//
+// With no terminal there is nobody to give consent, so there is none to infer: take
+// the safe default (no) and carry on. The interactive branch below is untouched.
+const ask = async (question, fallback = false) => {
+  if (!process.stdin.isTTY) return fallback
   const rl = createInterface({ input: process.stdin, output: process.stdout })
   const answer = await rl.question(question)
   rl.close()
   return /^y(es)?$/i.test(answer.trim())
 }
+
+// Prompt before replacing a statusLine block the user already configured. Defaulting
+// to no means a scripted `init` declines to clobber a status line it did not install,
+// which is the only safe reading of silence.
+const confirmReplace = (existing) =>
+  ask(`A statusLine already exists:\n  ${existing.command}\nReplace it? [y/N] `)
 
 const log = (m) => console.log(m)
 
