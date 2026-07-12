@@ -130,3 +130,21 @@ test('nerd-font mode has non-empty PUA glyphs', () => {
   assert.equal(t.glyph('branch').codePointAt(0), 0xe0a0)
   assert.ok(t.glyph('effort').length > 0 && t.glyph('model').length > 0)
 })
+
+// Icon spacing lives in ONE place (theme.icon), so no segment can re-invent it.
+// An emoji is double-width — the terminal reserves a trailing column its artwork
+// doesn't fill — so a space on top double-spaces the icon from its value.
+test('icon: double-width emoji brings its own gap; narrower glyphs take a space', () => {
+  assert.equal(makeTheme({ glyphs: 'emoji', colors: false }).icon('model'), '🧠')
+  assert.equal(makeTheme({ glyphs: 'simple', colors: false }).icon('reset'), '⧗ ')
+  assert.equal(makeTheme({ glyphs: 'nerd-font', colors: false }).icon('reset'), '⧗ ')
+})
+
+test('icon: absent glyph yields nothing at all — never a leading space', () => {
+  assert.equal(makeTheme({ glyphs: 'simple', colors: false }).icon('model'), '')
+  assert.equal(makeTheme({ glyphs: 'emoji', colors: false, icons: false }).icon('model'), '')
+})
+
+test('icon: tone colours the glyph only, and sits inside the gap', () => {
+  assert.equal(makeTheme({ glyphs: 'simple', colors: true }).icon('reset', 'green'), '\x1b[32m⧗\x1b[0m ')
+})

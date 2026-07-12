@@ -5,13 +5,13 @@ import { clean } from '../format.js'
 export const effort = {
   id: 'effort', section: 'claude',
   isAvailable: (input) => Boolean(input?.effort?.level),
-  format: (input, theme) => `${theme.glyph('effort') ? theme.glyph('effort') + ' ' : ''}${theme.primary(clean(input.effort.level))}`,
+  format: (input, theme) => `${theme.icon('effort')}${theme.primary(clean(input.effort.level))}`,
 }
 
 export const thinking = {
   id: 'thinking', section: 'claude',
   isAvailable: (input) => input?.thinking?.enabled === true,
-  format: (input, theme) => `${theme.glyph('thinking') ? theme.glyph('thinking') + ' ' : ''}${theme.primary('thinking')}`,
+  format: (input, theme) => `${theme.icon('thinking')}${theme.primary('thinking')}`,
 }
 
 export const outputStyle = {

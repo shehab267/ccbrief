@@ -11,12 +11,11 @@ export const tokens = {
     input?.context_window?.total_input_tokens != null || input?.context_window?.total_output_tokens != null,
   format: (input, theme) => {
     const cw = input.context_window
-    const glyph = theme.glyph('tokens')
     const n = formatTokens((Number(cw.total_input_tokens) || 0) + (Number(cw.total_output_tokens) || 0))
     // Yellow is the tokens field's identity hue — it does not vary with the
     // count. There is no "too many tokens" threshold to warn about here (the
     // context gauge already owns that signal), so this is a label, not a gauge.
-    return `${glyph ? glyph + ' ' : ''}${theme.color('yellow', n)}`
+    return `${theme.icon('tokens')}${theme.color('yellow', n)}`
   },
 }
 
@@ -29,7 +28,7 @@ export const remaining = {
 export const duration = {
   id: 'duration', section: 'usage',
   isAvailable: (input) => input?.cost?.total_duration_ms != null,
-  format: (input, theme) => `${theme.glyph('duration') ? theme.glyph('duration') + ' ' : ''}${theme.primary(formatDuration(input.cost.total_duration_ms))}`,
+  format: (input, theme) => `${theme.icon('duration')}${theme.primary(formatDuration(input.cost.total_duration_ms))}`,
 }
 
 export const cost = {
@@ -64,10 +63,19 @@ const usageTone = (pct) => (pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green')
 // fabricate a 0% or a NaN countdown. Both parts off, or both sources null → ''
 // → render() treats it as hidden, leaving no stray separator.
 function limit(id, key) {
-  // Session wears the ⧗ sand-timer, or `S` when the glyph resolves empty (ascii
-  // mode OR icons-off), so a bare countdown is never anonymous. Weekly wears a
-  // literal `wk` — a label, not a glyph, so it survives every mode.
-  const marker = (theme) => (id === 'weekly' ? 'wk' : theme.glyph('reset') || 'S')
+  // The head of the window: its marker plus the gap before the first value.
+  //
+  // Session wears the ⧗/⏳ timer in the countdown's green, so glyph and digits read
+  // as one object. When the glyph resolves empty (ascii mode OR icons-off) it falls
+  // back to `S`, so a bare countdown is never anonymous. Weekly wears a literal
+  // `wk` — a label, not a glyph, so it survives every mode and stays chrome-dim.
+  //
+  // `wk` and `S` are WORDS: they always take a space. Only a real glyph goes
+  // through theme.icon(), which knows a double-width emoji already brings its own.
+  const head = (theme) => {
+    if (id === 'weekly') return theme.secondary('wk') + ' '
+    return theme.glyph('reset') ? theme.icon('reset', 'green') : theme.color('green', 'S') + ' '
+  }
   return {
     id, section: 'usage',
     isAvailable: (input) => {
@@ -90,15 +98,10 @@ function limit(id, key) {
         parts.push(theme.color(usageTone(pct), `${pct}%`))
       }
       if (parts.length === 0) return ''
-      // The marker takes the countdown's green so the timer reads as one object
-      // (glyph + digits), exactly as the reference line drew it. `wk` is a word,
-      // not a value, so it stays chrome-dim.
-      const m = marker(theme)
-      const head = id === 'weekly' ? theme.secondary(m) : theme.color('green', m)
       // The ` · ` between parts is chrome, not state, so it's dimmed like the
       // other separators — otherwise it sits outside every SGR and glares white
       // on a dark theme while its neighbours recede. (Plain when colors are off.)
-      return `${head} ${parts.join(theme.color('dim', ' · '))}`
+      return `${head(theme)}${parts.join(theme.color('dim', ' · '))}`
     },
   }
 }

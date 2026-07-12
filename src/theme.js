@@ -62,6 +62,11 @@ export function makeTheme({ glyphs = 'simple', colors = true, icons = true } = {
   const mode = GLYPHS[glyphs] ? glyphs : 'simple'
   const bars = BAR[mode]
   const rawSep = SEP[mode]
+  // The gap between a glyph and the value it labels. Emoji are DOUBLE-width: the
+  // terminal already reserves a trailing column the artwork doesn't fill, so a
+  // space on top of that double-spaces the icon away from its value. Every other
+  // mode's glyphs (⧗, Nerd Font points) are single-width and still need the space.
+  const iconGap = mode === 'emoji' ? '' : ' '
   return {
     colors,
     icons,
@@ -72,6 +77,15 @@ export function makeTheme({ glyphs = 'simple', colors = true, icons = true } = {
     glyph(name) {
       if (!icons) return ''
       return GLYPHS[mode][name] ?? ''
+    },
+    // A glyph together with the gap that follows it — the ONE place that decides
+    // icon spacing, so no segment re-invents it. Empty (no leading space) when
+    // the glyph is absent, so a mode with no icon leaves no hole. `tone` colours
+    // the glyph only, never the value beside it.
+    icon(name, tone) {
+      const g = this.glyph(name)
+      if (!g) return ''
+      return (tone ? this.color(tone, g) : g) + iconGap
     },
     color(name, str) {
       if (!colors || !SGR[name]) return str

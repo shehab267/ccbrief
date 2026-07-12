@@ -23,8 +23,7 @@ export const model = {
   section: 'core',
   isAvailable: (input) => Boolean(input?.model?.display_name),
   format: (input, theme) => {
-    const glyph = theme.glyph('model')
-    return `${glyph ? glyph + ' ' : ''}${theme.color('cyanBold', clean(input.model.display_name))}`
+    return `${theme.icon('model')}${theme.color('cyanBold', clean(input.model.display_name))}`
   },
 }
 
@@ -38,8 +37,7 @@ export const repo = {
     // Green glyph, plain-foreground name: the branch is the one field that is
     // pure identity, so it reads at the default foreground while its marker
     // carries the colour.
-    const glyph = theme.glyph('branch')
-    const head = `${glyph ? theme.color('green', glyph) + ' ' : ''}${theme.primary(`${name}/${branch}`)}`
+    const head = `${theme.icon('branch', 'green')}${theme.primary(`${name}/${branch}`)}`
     // `+N/-M` is the git working-tree diff vs HEAD. Independently toggleable
     // (showDiff) so the branch can stand alone; still hidden when the tree is clean.
     const showDiff = entry?.showDiff ?? REPO_DEFAULTS.showDiff

@@ -71,10 +71,17 @@ test('time on but no resets_at → time hides; percent carries the segment', () 
 // --- Markers per glyph mode ---------------------------------------------------
 const emoji = makeTheme({ glyphs: 'emoji', colors: false, icons: true })
 const emojiNoIcons = makeTheme({ glyphs: 'emoji', colors: false, icons: false })
-const markerOf = (theme) => BY_ID.fiveHour.format(RL, theme, { showTime: true }).split(' ')[0]
-test('session marker is ⏳ in emoji mode', () => assert.equal(markerOf(emoji), '⏳'))
-test('session marker falls back to S in ascii mode', () => assert.equal(markerOf(plain), 'S'))
-test('session marker falls back to S when icons off, even in emoji mode', () => assert.equal(markerOf(emojiNoIcons), 'S'))
+const headOf = (theme) => BY_ID.fiveHour.format(RL, theme, { showTime: true })
+// The double-width ⏳ brings its own trailing column, so it takes NO space. The
+// word fallbacks (`S`, `wk`) are not pictographs and always take theirs.
+test('session marker is ⏳ in emoji mode, with no extra space before the time', () => {
+  assert.equal(headOf(emoji), '⏳2h 0m')
+})
+test('session marker falls back to S in ascii mode, and keeps its space', () => assert.equal(headOf(plain), 'S 2h 0m'))
+test('session marker falls back to S when icons off, even in emoji mode', () => assert.equal(headOf(emojiNoIcons), 'S 2h 0m'))
+test('single-width ⧗ (simple mode) keeps its space', () => {
+  assert.equal(headOf(makeTheme({ glyphs: 'simple', colors: false, icons: true })), '⧗ 2h 0m')
+})
 test('weekly marker is always wk, even with icons on', () => {
   const wk = BY_ID.weekly.format({ now: NOW, rate_limits: { seven_day: { used_percentage: 5, resets_at: NOW / 1000 + 10_000 } } }, emoji, { showTime: true })
   assert.ok(wk.startsWith('wk '))
