@@ -1,10 +1,17 @@
 {
   "name": "ccbrief",
   "version": "0.2.0",
-  "description": "A minimal, configurable status line for Claude Code.",
+  "description": "Minimal, configurable status line for Claude Code — context, tokens, cost and rate limits at a glance in your terminal.",
   "keywords": [
     "claude-code",
+    "claude",
+    "claude-code-statusline",
     "statusline",
+    "status-line",
+    "statusbar",
+    "context-window",
+    "token-usage",
+    "rate-limits",
     "terminal",
     "cli",
     "developer-tools"
@@ -32,6 +39,7 @@
   ],
   "scripts": {
     "build": "node build.mjs",
+    "demo": "node scripts/make-demo.mjs",
     "test": "node --test",
     "prepack": "npm run build",
     "prepublishOnly": "npm test"

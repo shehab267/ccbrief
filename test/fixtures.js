@@ -21,6 +21,31 @@ export const standard = {
   output_style: { name: 'concise' },
 }
 
+// The session behind the README's example line and the images in `assets/`.
+// Kept here with the other fixtures so the pictures we publish are produced by
+// the real renderer from dummy data everyone can see — never hand-drawn, and
+// never able to drift from what ccbrief actually prints (see fixtures.test.js).
+export const demo = {
+  now: NOW,
+  session_id: 'sess-demo',
+  workspace: { current_dir: '/home/dev/ccbrief', repo: { name: 'ccbrief' } },
+  git: { branch: 'main', added: 3, removed: 1 },
+  model: { display_name: 'Opus' },
+  context_window: {
+    used_percentage: 42,
+    remaining_percentage: 58,
+    total_input_tokens: 116_000,
+    total_output_tokens: 12_000,
+    current_usage: { input_tokens: 90_000, output_tokens: 12_000, cache_read_input_tokens: 26_000 },
+  },
+  cost: { total_duration_ms: 5_040_000, total_cost_usd: 1.23, total_lines_added: 120, total_lines_removed: 34 },
+  rate_limits: {
+    five_hour: { used_percentage: 40, resets_at: NOW / 1000 + 2 * 3600 },
+    seven_day: { used_percentage: 62, resets_at: NOW / 1000 + (3 * 24 + 4) * 3600 },
+  },
+  effort: { level: 'high' },
+}
+
 export const postCompact = {
   now: NOW,
   session_id: 'sess-compact',
