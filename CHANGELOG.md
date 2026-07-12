@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-07-13
+
+The release that makes the tool honest about itself: every segment it ships can
+now be switched on from the picker, and every command says what it did.
+
 ### Fixed
 - **`uninstall` works when nothing is there to answer its question.** Its prompt
   never settled at end-of-input — a pipe, a CI runner, `< /dev/null` — so the
@@ -192,5 +197,6 @@ version that actually does something.
   control characters before rendering, and PR links are wrapped as terminal
   hyperlinks only for `http(s)` URLs.
 
-[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/shehab267/ccbrief/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/shehab267/ccbrief/releases/tag/v0.2.0
