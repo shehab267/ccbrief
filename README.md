@@ -13,12 +13,12 @@ usage with a bar, tokens, session cost, 5-hour and weekly rate-limit resets, rea
 active model — the same line rendered on a dark and a light terminal theme.](https://raw.githubusercontent.com/shehab267/ccbrief/main/assets/ccbrief-claude-code-statusline.png)
 
 ```
-ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │ wk 3d 4h · 62% │ high │ Opus
+ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
 ```
 
 <sub>That's one line, shown above on two terminal themes. ccbrief's colors are ANSI <em>palette
 slots</em>, not hard-coded RGB, so your terminal resolves them against its own background and the line
-stays readable on dark and light alike — see <a href="#colors-and-glyphs">Colors and glyphs</a>.</sub>
+stays readable on dark and light alike — see <a href="#colors-and-symbols">Colors and symbols</a>.</sub>
 
 ```sh
 npx ccbrief init
@@ -36,8 +36,11 @@ npx ccbrief init
 ```
 
 That copies a self-contained renderer into `~/.claude/ccbrief/`, backs up your `settings.json`, and
-merges in the `statusLine` block — leaving everything else in your settings untouched. Claude Code
-picks it up on the next render.
+merges in the `statusLine` block — leaving everything else in your settings untouched. It finishes by
+showing you a preview and what to do next.
+
+**No restart needed.** Claude Code reloads its settings on its own, so your status line appears the next
+time you interact with it.
 
 Requires **Node ≥ 22**. Works on **Windows, macOS, Linux and  WSL**.
 
@@ -75,17 +78,18 @@ before removing the `~/.claude/ccbrief/` directory.
 
 ## Presets
 
-**Detailed** — the default. Everything on screen, so you can turn *off* what you don't want rather
-than hunt for what you're missing.
+**Standard** — the default. The four things you actually look at: where you are, how full the context
+is, when your limit resets and how much of it you've spent, and which model you're on.
 
 ```
-ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m │ wk 3d 4h · 62% │ high │ Opus
+ccbrief/main │ 42% ━━━━───── │ ⧗ 2h 0m · 40% │ Opus
 ```
 
-**Standard** — the essentials.
+**Detailed** — everything ccbrief knows, one `p` away in the picker. Turn *off* what you don't want
+rather than hunt for what you're missing.
 
 ```
-ccbrief/main │ 42% ━━━━───── │ ⧗ 2h 0m │ Opus
+ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
 ```
 
 Too wide for your terminal? ccbrief packs whole segments across up to three rows — it never splits a
@@ -93,7 +97,7 @@ segment or lets the terminal wrap mid-field:
 
 ```
 ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23
-⧗ 2h 0m │ wk 3d 4h · 62% │ high │ Opus
+⧗ 2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
 ```
 
 **A segment with no data is hidden, never faked.** Context % and rate limits are null early in a
@@ -107,15 +111,24 @@ session and right after `/compact` — you'll see fewer segments, never a made-u
 npx ccbrief config
 ```
 
-An interactive picker with a live preview. Saving also re-syncs `settings.json`, so changes take
-effect on Claude Code's next render — no reinstall.
+An interactive picker with a live preview. Every segment is listed with its plain-English name, so you
+never have to guess what `fiveHour` means:
+
+```
+▸ [x] repo        repository / branch  diff ○
+  [x] context     context used
+  [x] fiveHour    session limit (5h)   time ●  percent ●
+  [x] model       model
+```
+
+Saving also re-syncs `settings.json`, so changes take effect on Claude Code's next render — no reinstall.
 
 | Key | Does |
 |-----|------|
 | `space` | turn the focused segment on / off |
 | `↑` `↓` | move between segments |
 | `←` `→` | reorder the focused segment |
-| `p` `g` `c` `i` `l` | cycle preset · glyphs · colors · icons · layout |
+| `p` `y` `c` `i` `l` | cycle preset · symbols · colors · icons · layout |
 | `d` | on `repo`: show/hide the working-tree diff (`+3/-1`) |
 | `t` `%` | on `fiveHour` / `weekly`: show/hide the countdown / the usage percent |
 | `↵` or `s` | save and exit |
@@ -128,13 +141,16 @@ optional — missing or malformed falls back to defaults and never breaks the st
 
 | Key | Values | Default |
 |-----|--------|---------|
-| `preset` | `standard` · `detailed` · `custom` | `detailed` |
+| `preset` | `standard` · `detailed` · `custom` | `standard` |
 | `layout` | `auto` · `single-line` · `multi-line` | `auto` |
 | `maxRows` | `1`–`3` | `3` |
-| `glyphs` | `simple` · `emoji` · `nerd-font` · `ascii` | `simple` |
+| `symbols` | `simple` · `emoji` · `nerd-font` · `ascii` | `simple` |
 | `colors` | `true` · `false` | `true` |
 | `icons` | `true` · `false` | `true` |
 | `segments` | ordered list — used when `preset` is `custom` | — |
+
+<sub><code>symbols</code> used to be called <code>glyphs</code>. Configs written by an older version still
+work — the old name is read as <code>symbols</code>.</sub>
 
 `custom` is also how you reach the segments that aren't in either preset (see the ✎ rows below):
 
@@ -164,8 +180,8 @@ Every segment hides itself when its data isn't there, so you only ever see live 
 | `context` | Context used, with a bar (`42% ━━━━─────`) | Null early in a session / after `/compact` |
 | `tokens` | Tokens in context (`128k`) | Before the first response / after `/compact` |
 | `cost` | Session cost (`$1.23`) | Absent |
-| `fiveHour` | 5-hour limit reset (`⧗ 2h 0m`); `showPercent` adds usage | Not on Pro/Max |
-| `weekly` | 7-day limit (`wk 3d 4h · 62%`) | Not on Pro/Max |
+| `fiveHour` | Session limit — reset countdown + usage (`⧗ 2h 0m · 40%`) | Not on Pro/Max |
+| `weekly` | Weekly limit — reset countdown + usage (`wk 3d 4h · 62%`) | Not on Pro/Max |
 | `lines` | Lines Claude added/removed this session (`+120/-34`) | Absent |
 | `effort` | Reasoning effort (`high`) | Absent |
 | `model` | Active model (`Opus`) | Absent |
@@ -185,7 +201,7 @@ The usage `%` beside it is the part that warns you.
 
 ---
 
-## Colors and glyphs
+## Colors and symbols
 
 **Each field has its own color, so you can find it without reading it** — context is magenta, tokens
 yellow, the reset timer green, the model cyan. Color says *which field this is*. Only the context bar
@@ -195,13 +211,14 @@ Colors come from the **standard ANSI palette**, never hard-coded RGB — so your
 them against its own background and the line stays readable on **dark and light** themes alike.
 Nothing is dimmed except separators; information is never greyed out.
 
-Four glyph modes. `simple` is the default because it's the only one that looks the same for everyone:
+Four symbol sets — they pick the icons, the bar characters and the separator. `simple` is the default
+because it's the only one that looks the same for everyone:
 
 ```
-simple    ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m │ high │ Opus
-emoji     🌿ccbrief/main │ 42% ━━━━───── │ 🔸128k │ ⏳2h 0m │ ⚡high │ 🧠Opus
-nerd-font  ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m │  high │  Opus
-ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m | high | Opus
+simple    ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │ high │ Opus
+emoji     🌿ccbrief/main │ 42% ━━━━───── │ 🔸128k │ ⏳2h 0m · 40% │ ⚡high │ 🧠Opus
+nerd-font  ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │  high │  Opus
+ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m · 40% | high | Opus
 ```
 
 `nerd-font` **renders blank boxes unless you have a Nerd Font installed** — the picker labels it and
@@ -230,7 +247,8 @@ is on.
 
 **How do I add a status line to Claude Code?**
 Run `npx ccbrief init`. It writes the renderer to `~/.claude/ccbrief/` and merges a `statusLine` block
-into your `settings.json`, backing the file up first. Claude Code picks it up on the next render.
+into your `settings.json`, backing the file up first, then tells you what to do next. No restart: Claude
+Code reloads its settings on its own and the line appears the next time you interact with it.
 
 **Why did my context percentage disappear?**
 Because Claude Code hasn't reported one yet. `used_percentage` is null early in a session and right

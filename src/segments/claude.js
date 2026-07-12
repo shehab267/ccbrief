@@ -3,25 +3,25 @@
 import { clean } from '../format.js'
 
 export const effort = {
-  id: 'effort', section: 'claude',
+  id: 'effort', title: 'reasoning effort', section: 'claude',
   isAvailable: (input) => Boolean(input?.effort?.level),
   format: (input, theme) => `${theme.icon('effort')}${theme.primary(clean(input.effort.level))}`,
 }
 
 export const thinking = {
-  id: 'thinking', section: 'claude',
+  id: 'thinking', title: 'thinking indicator', section: 'claude',
   isAvailable: (input) => input?.thinking?.enabled === true,
   format: (input, theme) => `${theme.icon('thinking')}${theme.primary('thinking')}`,
 }
 
 export const outputStyle = {
-  id: 'outputStyle', section: 'claude',
+  id: 'outputStyle', title: 'output style', section: 'claude',
   isAvailable: (input) => Boolean(input?.output_style?.name),
   format: (input, theme) => theme.primary(clean(input.output_style.name)),
 }
 
 export const agent = {
-  id: 'agent', section: 'claude',
+  id: 'agent', title: 'active agent', section: 'claude',
   isAvailable: (input) => Boolean(input?.agent?.name),
   format: (input, theme) => theme.primary(clean(input.agent.name)),
 }

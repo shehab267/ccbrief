@@ -5,7 +5,7 @@ import * as fx from './fixtures.js'
 
 const cfg = (segments, over = {}) => ({
   version: 1, preset: 'custom', layout: 'single-line', maxRows: 3,
-  glyphs: 'ascii', colors: false, icons: false, segments, ...over,
+  symbols: 'ascii', colors: false, icons: false, segments, ...over,
 })
 
 test('renders enabled+available segments in order', () => {

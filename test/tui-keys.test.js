@@ -39,7 +39,7 @@ test('s saves, writes config.json, and returns the saved config', async () => {
   input.write('s')
   const saved = await done
   assert.ok(saved, 'save must return the config so the caller can re-sync settings.json')
-  assert.equal(saved.preset, 'detailed')
+  assert.equal(saved.preset, 'standard')
   assert.deepEqual(JSON.parse(readFileSync(join(dir, 'config.json'), 'utf8')), saved)
 })
 
@@ -54,3 +54,18 @@ test('an arrow key is not mistaken for esc', async () => {
   input.write('s')
   assert.ok(await done, 'arrow key quit the TUI instead of moving the cursor')
 })
+
+// `y` cycles the symbol set (`s` is taken by save). `g` — what the key was when the
+// setting was called "glyphs" — must keep working, or the rename silently breaks a
+// habit for every existing user.
+for (const key of ['y', 'g']) {
+  test(`${key} cycles the symbol set`, async () => {
+    const dir = tmp()
+    const input = fakeTty()
+    const done = runConfigTui({ dir, initialConfig: { symbols: 'simple' }, input, output: sink() })
+    input.write(key)
+    await new Promise(setImmediate)
+    input.write('s')
+    assert.equal((await done).symbols, 'emoji') // simple → emoji, the next set in the cycle
+  })
+}

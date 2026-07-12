@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { render } from '../render.js'
 import { initialState, reduce, stateToConfig } from './state.js'
 import { refreshIntervalFor, loadConfig } from '../config.js'
-import { optionsFor } from '../segments/index.js'
+import { optionsFor, BY_ID } from '../segments/index.js'
 import { ccbriefDir } from '../paths.js'
 
 // The preview session is shared with `init` (src/preview.js) so both previews and
@@ -15,11 +15,11 @@ import { ccbriefDir } from '../paths.js'
 export { PREVIEW_INPUT } from '../preview.js'
 import { PREVIEW_INPUT } from '../preview.js'
 
-// Each glyph mode's portability, surfaced live in the panel so the choice is
+// Each symbol set's portability, surfaced live in the panel so the choice is
 // informed. `nerd-font` renders blank without a Nerd Font installed — the exact
 // trap that silently wiped a user's icons — so it says so. The live preview is
 // the proof; this label is the warning that makes a blank preview make sense.
-const GLYPH_NOTES = {
+const SYMBOL_NOTES = {
   simple: 'same on every terminal',
   emoji: 'most terminals; look varies',
   'nerd-font': 'needs a Nerd Font installed',
@@ -29,36 +29,41 @@ const GLYPH_NOTES = {
 export function renderPanel(state, ctx = { columns: 80 }) {
   const preview = render(PREVIEW_INPUT, stateToConfig(state), ctx)
   const enabled = state.segments.filter((s) => s.enabled).map((s) => s.id).join(', ')
-  // The keymap stays global and static. The per-window time/pct toggles are not
-  // listed here — they get a dedicated plain-language tip (limitHint) shown only
+  // The keymap stays global and static. The per-window time/percent toggles are not
+  // listed here — they get a dedicated plain-language tip (optionHint) shown only
   // while a limit row is focused, which reads as guidance instead of one more
   // cryptic key token crammed into this line.
   return [
     `ccbrief · configuration                 preset: ${state.preset}`,
     `segments: ${enabled}`,
-    `glyphs: ${state.glyphs} (${GLYPH_NOTES[state.glyphs] ?? ''})   colors: ${state.colors ? 'on' : 'off'}   icons: ${state.icons ? 'on' : 'off'}   layout: ${state.layout}`,
+    `symbols: ${state.symbols} (${SYMBOL_NOTES[state.symbols] ?? ''})   colors: ${state.colors ? 'on' : 'off'}   icons: ${state.icons ? 'on' : 'off'}   layout: ${state.layout}`,
     `Preview ${'─'.repeat(Math.max(0, ctx.columns - 8))}`,
     ` ${preview}`,
     '─'.repeat(ctx.columns),
-    `[space] toggle  [↑↓] move  [←→] reorder  [p] preset  [g] glyphs  [c] colors  [i] icons  [l] layout  [↵/s] save  [esc/q] quit`,
+    `[space] toggle  [↑↓] move  [←→] reorder  [p] preset  [y] symbols  [c] colors  [i] icons  [l] layout  [↵/s] save  [esc/q] quit`,
   ].join('\n')
 }
 
-// The segment list with the cursor. A segment with declared toggles (repo →
-// diff; the rate-limit windows → time / pct) shows each part's visibility as a
-// filled/empty dot — ● shown, ○ hidden — and nothing else, so a row you aren't
-// editing stays quiet. The keys that flip them live in a separate one-line tip
-// (optionHint), because gluing `[t]`/`[%]`/`[d]` onto the dots read as clutter,
-// not as guidance. Pure (paint() is the only caller) so the markup is testable.
+// The segment list with the cursor. Every row carries BOTH its id and its plain-word
+// title: the id is what you'd type into config.json, the title is what the segment
+// actually is — `fiveHour` tells you nothing you didn't already have to know.
+//
+// A segment with declared toggles (repo → diff; the rate-limit windows → time /
+// percent) shows each part's visibility as a filled/empty dot — ● shown, ○ hidden —
+// and nothing else, so a row you aren't editing stays quiet. The keys that flip them
+// live in a separate one-line tip (optionHint), because gluing `[t]`/`[%]`/`[d]` onto
+// the dots read as clutter, not as guidance. Fixed-width columns keep ids, titles and
+// dots aligned down the list; trailing padding is trimmed so a row without dots ends
+// where its title does. Pure (paint() is the only caller) so the markup is testable.
 export function renderMarks(state, cursor) {
   const dot = (on) => (on ? '●' : '○')
   return state.segments
     .map((s, i) => {
       const opts = optionsFor(s.id)
       const dots = opts.map((o) => `${o.label} ${dot(s[o.key] ?? o.default)}`).join('  ')
-      const opt = opts.length ? `  ${dots}` : ''
-      const id = opts.length ? s.id.padEnd(9) : s.id
-      return `${i === cursor ? '▸' : ' '} ${s.enabled ? '[x]' : '[ ]'} ${id}${opt}`
+      const title = BY_ID[s.id]?.title ?? ''
+      const head = `${i === cursor ? '▸' : ' '} ${s.enabled ? '[x]' : '[ ]'} `
+      return (head + s.id.padEnd(12) + title.padEnd(21) + dots).trimEnd()
     })
     .join('\n')
 }
@@ -70,7 +75,7 @@ export function renderMarks(state, cursor) {
 export function optionHint(focusedId) {
   const opts = optionsFor(focusedId)
   if (!opts.length) return ''
-  const parts = opts.map((o) => `[${o.ch}] ${o.long ?? o.label}`).join(' · ')
+  const parts = opts.map((o) => `[${o.ch}] ${o.label}`).join(' · ')
   return `tip: ${parts} — show/hide`
 }
 
@@ -82,7 +87,7 @@ export function saveConfig(state, dir = ccbriefDir()) {
 }
 
 const PRESET_CYCLE = ['standard', 'detailed', 'custom']
-const GLYPH_CYCLE = ['simple', 'emoji', 'nerd-font', 'ascii']
+const SYMBOL_CYCLE = ['simple', 'emoji', 'nerd-font', 'ascii']
 const LAYOUT_CYCLE = ['auto', 'single-line', 'multi-line']
 const next = (cycle, cur) => cycle[(cycle.indexOf(cur) + 1) % cycle.length]
 
@@ -130,7 +135,10 @@ export async function runConfigTui({ dir = ccbriefDir(), initialConfig, input = 
         case '\x1b[D': if (id && cursor > 0) { state = reduce(state, { type: 'move', id, dir: -1 }); cursor-- } break // ← reorder earlier
         case '\x1b[C': if (id && cursor < state.segments.length - 1) { state = reduce(state, { type: 'move', id, dir: 1 }); cursor++ } break // → reorder later
         case 'p': state = reduce(state, { type: 'preset', preset: next(PRESET_CYCLE, state.preset) }); cursor = 0; break
-        case 'g': state = reduce(state, { type: 'set', key: 'glyphs', value: next(GLYPH_CYCLE, state.glyphs) }); break
+        // `y` because the setting is `symbols` and `s` is taken by save. `g` is the
+        // key this used to be (back when it was called "glyphs") — still accepted, so
+        // muscle memory keeps working, but no longer advertised in the keymap.
+        case 'y': case 'g': state = reduce(state, { type: 'set', key: 'symbols', value: next(SYMBOL_CYCLE, state.symbols) }); break
         case 'c': state = reduce(state, { type: 'set', key: 'colors', value: !state.colors }); break
         case 'i': state = reduce(state, { type: 'set', key: 'icons', value: !state.icons }); break
         case 'l': state = reduce(state, { type: 'set', key: 'layout', value: next(LAYOUT_CYCLE, state.layout) }); break

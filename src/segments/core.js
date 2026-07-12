@@ -1,5 +1,8 @@
-// Core segments. Each segment is a pure { id, section, isAvailable, format } object.
-// `repo` (Task 5) and `context` (Task 6) are appended to this file as they land.
+// Core segments. Each segment is a pure { id, title, section, isAvailable, format }
+// object. `title` is the segment's name in plain words — the `id` is a config key
+// (terse, stable, camelCase), and a config key is a poor thing to ask someone to
+// read in a picker. The picker shows both, so the word teaches and the id is still
+// the thing you'd type into config.json.
 import { clean } from '../format.js'
 import { optionDefaults } from './options.js'
 const basename = (p) => String(p ?? '').split(/[\\/]/).filter(Boolean).pop() ?? ''
@@ -13,6 +16,7 @@ const REPO_DEFAULTS = optionDefaults('repo')
 // for a bright slot.
 export const directory = {
   id: 'directory',
+  title: 'current folder',
   section: 'core',
   isAvailable: (input) => Boolean(input?.workspace?.current_dir),
   format: (input, theme) => theme.color('cyan', clean(basename(input.workspace.current_dir))),
@@ -20,6 +24,7 @@ export const directory = {
 
 export const model = {
   id: 'model',
+  title: 'model',
   section: 'core',
   isAvailable: (input) => Boolean(input?.model?.display_name),
   format: (input, theme) => {
@@ -29,12 +34,13 @@ export const model = {
 
 export const repo = {
   id: 'repo',
+  title: 'repository / branch',
   section: 'core',
   isAvailable: (input) => Boolean(input?.git),
   format: (input, theme, entry) => {
     const name = clean(input.workspace?.repo?.name ?? basename(input.workspace?.current_dir))
     const branch = clean(input.git.branch)
-    // Green glyph, plain-foreground name: the branch is the one field that is
+    // Green symbol, plain-foreground name: the branch is the one field that is
     // pure identity, so it reads at the default foreground while its marker
     // carries the colour.
     const head = `${theme.icon('branch', 'green')}${theme.primary(`${name}/${branch}`)}`
@@ -49,6 +55,7 @@ export const repo = {
 
 export const context = {
   id: 'context',
+  title: 'context used',
   section: 'core',
   // Only when used_percentage is a real number: null early in a session and
   // post-/compact → hide, never render a fabricated 0%. (0 itself is valid.)

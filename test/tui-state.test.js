@@ -32,9 +32,9 @@ test('setOption toggles a limit part and flips preset to custom', () => {
   assert.equal(s.preset, 'custom')
 })
 test('stateToConfig preserves showTime/showPercent', () => {
-  assert.deepEqual(stateToConfig(s0()).segments.find((x) => x.id === 'fiveHour'), { id: 'fiveHour', enabled: true, showTime: true, showPercent: false })
+  assert.deepEqual(stateToConfig(s0()).segments.find((x) => x.id === 'fiveHour'), { id: 'fiveHour', enabled: true, showTime: true, showPercent: true })
 })
 test('stateToConfig round-trips through loadConfig', () => {
-  const cfg = stateToConfig(reduce(s0(), { type: 'set', key: 'glyphs', value: 'ascii' }))
+  const cfg = stateToConfig(reduce(s0(), { type: 'set', key: 'symbols', value: 'ascii' }))
   assert.deepEqual(loadConfig(cfg), cfg)
 })

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { BY_ID } from '../src/segments/index.js'
 import { makeTheme } from '../src/theme.js'
 
-const plain = makeTheme({ glyphs: 'ascii', colors: false, icons: false })
+const plain = makeTheme({ symbols: 'ascii', colors: false, icons: false })
 
 test('repo hidden when no git', () => {
   assert.equal(BY_ID.repo.isAvailable({ git: null }), false)

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { BY_ID } from '../src/segments/index.js'
 import { makeTheme } from '../src/theme.js'
 
-const plain = makeTheme({ glyphs: 'ascii', colors: false, icons: false })
+const plain = makeTheme({ symbols: 'ascii', colors: false, icons: false })
 const show = (id, input) => (BY_ID[id].isAvailable(input) ? BY_ID[id].format(input, plain) : null)
 const NOW = 1_760_000_000_000
 
@@ -24,12 +24,12 @@ for (const [name, id, input, expected] of rows) {
 
 // --- Rate-limit windows -------------------------------------------------------
 // resets_at is Unix epoch SECONDS (official contract); input.now is Date.now() ms.
-// With icons off the session glyph resolves empty, so its marker falls back to `S`;
-// weekly's `wk` is a literal label present in every mode.
+// With icons off the session symbol resolves empty, so its marker falls back to `S`;
+// weekly's `wk` is a literal label present in every set.
 
-test('fiveHour default is time-only → `S <countdown>`', () => {
+test('fiveHour default is time + percent → `S <countdown> · <percent>`', () => {
   const out = show('fiveHour', { now: NOW, rate_limits: { five_hour: { used_percentage: 40, resets_at: NOW / 1000 + 2 * 3600 } } })
-  assert.equal(out, 'S 2h 0m')
+  assert.equal(out, 'S 2h 0m · 40%')
 })
 
 test('weekly default is time + percent → `wk <countdown> · <pct>`', () => {
@@ -68,10 +68,10 @@ test('time on but no resets_at → time hides; percent carries the segment', () 
   assert.equal(out, 'S 40%')
 })
 
-// --- Markers per glyph mode ---------------------------------------------------
-const emoji = makeTheme({ glyphs: 'emoji', colors: false, icons: true })
-const emojiNoIcons = makeTheme({ glyphs: 'emoji', colors: false, icons: false })
-const headOf = (theme) => BY_ID.fiveHour.format(RL, theme, { showTime: true })
+// --- Markers per symbol set ---------------------------------------------------
+const emoji = makeTheme({ symbols: 'emoji', colors: false, icons: true })
+const emojiNoIcons = makeTheme({ symbols: 'emoji', colors: false, icons: false })
+const headOf = (theme) => BY_ID.fiveHour.format(RL, theme, { showTime: true, showPercent: false })
 // The double-width ⏳ brings its own trailing column, so it takes NO space. The
 // word fallbacks (`S`, `wk`) are not pictographs and always take theirs.
 test('session marker is ⏳ in emoji mode, with no extra space before the time', () => {
@@ -80,10 +80,10 @@ test('session marker is ⏳ in emoji mode, with no extra space before the time',
 test('session marker falls back to S in ascii mode, and keeps its space', () => assert.equal(headOf(plain), 'S 2h 0m'))
 test('session marker falls back to S when icons off, even in emoji mode', () => assert.equal(headOf(emojiNoIcons), 'S 2h 0m'))
 test('single-width ⧗ (simple mode) keeps its space', () => {
-  assert.equal(headOf(makeTheme({ glyphs: 'simple', colors: false, icons: true })), '⧗ 2h 0m')
+  assert.equal(headOf(makeTheme({ symbols: 'simple', colors: false, icons: true })), '⧗ 2h 0m')
 })
 test('weekly marker is always wk, even with icons on', () => {
-  const wk = BY_ID.weekly.format({ now: NOW, rate_limits: { seven_day: { used_percentage: 5, resets_at: NOW / 1000 + 10_000 } } }, emoji, { showTime: true })
+  const wk = BY_ID.weekly.format({ now: NOW, rate_limits: { seven_day: { used_percentage: 5, resets_at: NOW / 1000 + 10_000 } } }, emoji, { showTime: true, showPercent: false })
   assert.ok(wk.startsWith('wk '))
 })
 
@@ -91,7 +91,7 @@ test('weekly marker is always wk, even with icons on', () => {
 // It counts down to the moment quota RESETS, so a small number is good news. The
 // old ramp (neutral → yellow → orange as the reset neared) painted approaching
 // relief as approaching danger. Urgency for this window lives in used_percentage.
-const colored = makeTheme({ glyphs: 'ascii', colors: true, icons: false })
+const colored = makeTheme({ symbols: 'ascii', colors: true, icons: false })
 const at = (minsLeft) => BY_ID.fiveHour.format(
   { now: NOW, rate_limits: { five_hour: { used_percentage: 5, resets_at: NOW / 1000 + minsLeft * 60 } } },
   colored, { showTime: true, showPercent: false },

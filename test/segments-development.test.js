@@ -4,7 +4,7 @@ import { BY_ID } from '../src/segments/index.js'
 import { makeTheme } from '../src/theme.js'
 import { visibleWidth } from '../src/width.js'
 
-const plain = makeTheme({ glyphs: 'ascii', colors: false, icons: false })
+const plain = makeTheme({ symbols: 'ascii', colors: false, icons: false })
 const show = (id, input) => (BY_ID[id].isAvailable(input) ? BY_ID[id].format(input, plain) : null)
 
 test('lines +/-', () => {
