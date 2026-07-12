@@ -7,11 +7,15 @@ const basename = (p) => String(p ?? '').split(/[\\/]/).filter(Boolean).pop() ?? 
 // so it can't drift from what withOptions writes into the config entry.
 const REPO_DEFAULTS = optionDefaults('repo')
 
+// Each field wears its own hue, so the eye finds "where am I" by colour rather
+// than by counting separators. Cyan for the two "which environment" fields —
+// directory and model — bold on the model to separate the pair without reaching
+// for a bright slot.
 export const directory = {
   id: 'directory',
   section: 'core',
   isAvailable: (input) => Boolean(input?.workspace?.current_dir),
-  format: (input, theme) => theme.primary(clean(basename(input.workspace.current_dir))),
+  format: (input, theme) => theme.color('cyan', clean(basename(input.workspace.current_dir))),
 }
 
 export const model = {
@@ -20,7 +24,7 @@ export const model = {
   isAvailable: (input) => Boolean(input?.model?.display_name),
   format: (input, theme) => {
     const glyph = theme.glyph('model')
-    return `${glyph ? glyph + ' ' : ''}${theme.primary(clean(input.model.display_name))}`
+    return `${glyph ? glyph + ' ' : ''}${theme.color('cyanBold', clean(input.model.display_name))}`
   },
 }
 
@@ -31,8 +35,11 @@ export const repo = {
   format: (input, theme, entry) => {
     const name = clean(input.workspace?.repo?.name ?? basename(input.workspace?.current_dir))
     const branch = clean(input.git.branch)
+    // Green glyph, plain-foreground name: the branch is the one field that is
+    // pure identity, so it reads at the default foreground while its marker
+    // carries the colour.
     const glyph = theme.glyph('branch')
-    const head = `${glyph ? glyph + ' ' : ''}${theme.primary(`${name}/${branch}`)}`
+    const head = `${glyph ? theme.color('green', glyph) + ' ' : ''}${theme.primary(`${name}/${branch}`)}`
     // `+N/-M` is the git working-tree diff vs HEAD. Independently toggleable
     // (showDiff) so the branch can stand alone; still hidden when the tree is clean.
     const showDiff = entry?.showDiff ?? REPO_DEFAULTS.showDiff
@@ -50,9 +57,13 @@ export const context = {
   isAvailable: (input) => input?.context_window?.used_percentage != null,
   format: (input, theme) => {
     const pct = Math.round(input.context_window.used_percentage)
-    // Same tone drives the number AND the bar fill so the whole segment reads
-    // as one gauge: green plenty → yellow filling → red nearly full.
+    // The number and the bar carry DIFFERENT things. The number is flat magenta —
+    // it is the context field's identity hue, and it stays put so the eye can
+    // find it. The bar alone ramps green → yellow → red with the fill, because
+    // the bar is the part that means "how full". Colouring both by the threshold
+    // (as this once did) says the same thing twice and leaves the segment with no
+    // stable colour to recognise it by.
     const tone = pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green'
-    return `${theme.color(tone, `${pct}%`)} ${theme.bar(pct, 9, tone)}`
+    return `${theme.color('magenta', `${pct}%`)} ${theme.bar(pct, 9, tone)}`
   },
 }

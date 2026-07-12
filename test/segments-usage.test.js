@@ -72,7 +72,7 @@ test('time on but no resets_at → time hides; percent carries the segment', () 
 const emoji = makeTheme({ glyphs: 'emoji', colors: false, icons: true })
 const emojiNoIcons = makeTheme({ glyphs: 'emoji', colors: false, icons: false })
 const markerOf = (theme) => BY_ID.fiveHour.format(RL, theme, { showTime: true }).split(' ')[0]
-test('session marker is ⧗ in emoji mode', () => assert.equal(markerOf(emoji), '⧗'))
+test('session marker is ⏳ in emoji mode', () => assert.equal(markerOf(emoji), '⏳'))
 test('session marker falls back to S in ascii mode', () => assert.equal(markerOf(plain), 'S'))
 test('session marker falls back to S when icons off, even in emoji mode', () => assert.equal(markerOf(emojiNoIcons), 'S'))
 test('weekly marker is always wk, even with icons on', () => {
@@ -80,39 +80,52 @@ test('weekly marker is always wk, even with icons on', () => {
   assert.ok(wk.startsWith('wk '))
 })
 
-// --- Countdown tone by time-remaining: yellow ≤90m, orange ≤45m, NEVER red ----
+// --- The countdown is GREEN, always: it has no urgency ramp -------------------
+// It counts down to the moment quota RESETS, so a small number is good news. The
+// old ramp (neutral → yellow → orange as the reset neared) painted approaching
+// relief as approaching danger. Urgency for this window lives in used_percentage.
 const colored = makeTheme({ glyphs: 'ascii', colors: true, icons: false })
 const at = (minsLeft) => BY_ID.fiveHour.format(
   { now: NOW, rate_limits: { five_hour: { used_percentage: 5, resets_at: NOW / 1000 + minsLeft * 60 } } },
   colored, { showTime: true, showPercent: false },
 )
-test('tone boundary: 91m → neutral (dim), not green', () => {
-  assert.ok(at(91).includes('\x1b[2m1h 31m\x1b[0m'))
-  assert.ok(!at(91).includes('\x1b[38;2;245;203;65m') && !at(91).includes('\x1b[38;2;169;222;90m'))
+test('countdown is green whether the reset is hours away or minutes away', () => {
+  assert.ok(at(240).includes('\x1b[32m4h 0m\x1b[0m'))
+  assert.ok(at(91).includes('\x1b[32m1h 31m\x1b[0m'))
+  assert.ok(at(45).includes('\x1b[32m45m\x1b[0m'))
+  assert.ok(at(1).includes('\x1b[32m1m\x1b[0m'))
 })
-test('tone boundary: 90m → yellow', () => assert.ok(at(90).includes('\x1b[38;2;245;203;65m1h 30m\x1b[0m')))
-test('tone boundary: 46m → yellow', () => assert.ok(at(46).includes('\x1b[38;2;245;203;65m46m\x1b[0m')))
-test('tone boundary: 45m → orange', () => assert.ok(at(45).includes('\x1b[38;2;239;157;43m45m\x1b[0m')))
-test('tone: never red, even at 1 minute (orange, not red)', () => {
-  const out = at(1)
-  assert.ok(out.includes('\x1b[38;2;239;157;43m'))
-  assert.ok(!out.includes('\x1b[38;2;236;37;61m') && !out.includes('38;5;196') && !out.includes('38;5;202'))
+test('countdown never warms or alarms — no yellow, orange or red at any distance', () => {
+  for (const m of [240, 91, 90, 46, 45, 10, 1, -5]) {
+    const out = at(m)
+    assert.ok(!out.includes('\x1b[33m'), `${m}m should not go yellow`)
+    assert.ok(!out.includes('\x1b[31m'), `${m}m should not go red`)
+    assert.ok(!out.includes('38;2;'), `${m}m should not pin truecolor`)
+  }
 })
-test('reset due is dim, never red', () => {
-  const out = at(-5)
-  assert.ok(out.includes('\x1b[2mreset due\x1b[0m'))
-  assert.ok(!out.includes('\x1b[38;2;236;37;61m') && !out.includes('38;5;196'))
+test('a passed reset reads "reset due" in the same calm green', () => {
+  assert.ok(at(-5).includes('\x1b[32mreset due\x1b[0m'))
 })
 
-// Percent keeps the usage scale (green <70, yellow ≥70, red ≥90) — "no red"
-// applies only to the countdown, never the percent.
+// The session marker takes the countdown's green so glyph + digits read as ONE
+// object, exactly as the reference line drew it. `wk` is a word, not a value, so
+// it stays chrome-dim.
+test('session marker is green with the countdown; weekly `wk` label stays dim', () => {
+  const s5 = BY_ID.fiveHour.format(RL, colored, { showTime: true, showPercent: false })
+  assert.ok(s5.startsWith('\x1b[32mS\x1b[0m '))
+  const wk = BY_ID.weekly.format({ now: NOW, rate_limits: { seven_day: { used_percentage: 5, resets_at: NOW / 1000 + 10_000 } } }, colored, { showTime: true, showPercent: false })
+  assert.ok(wk.startsWith('\x1b[2mwk\x1b[0m '))
+})
+
+// Percent keeps the usage scale (green <70, yellow ≥70, red ≥90) — it is the ONLY
+// place in the rate-limit window where colour means "state".
 const pctTone = (used) => BY_ID.fiveHour.format({ now: NOW, rate_limits: { five_hour: { used_percentage: used } } }, colored, { showTime: false, showPercent: true })
 test('percent tone: 69% → green, 70% → yellow (usage boundary)', () => {
-  assert.ok(pctTone(69).includes('\x1b[38;2;169;222;90m69%\x1b[0m'))
-  assert.ok(pctTone(70).includes('\x1b[38;2;245;203;65m70%\x1b[0m'))
+  assert.ok(pctTone(69).includes('\x1b[32m69%\x1b[0m'))
+  assert.ok(pctTone(70).includes('\x1b[33m70%\x1b[0m'))
 })
 test('percent tone: ≥90% → red (usage signal, not the countdown)', () => {
-  assert.ok(pctTone(95).includes('\x1b[38;2;236;37;61m95%\x1b[0m'))
+  assert.ok(pctTone(95).includes('\x1b[31m95%\x1b[0m'))
 })
 
 // The inter-part separator is dimmed chrome, never full-bright (premium palette).

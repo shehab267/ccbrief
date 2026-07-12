@@ -11,7 +11,12 @@ export const tokens = {
     input?.context_window?.total_input_tokens != null || input?.context_window?.total_output_tokens != null,
   format: (input, theme) => {
     const cw = input.context_window
-    return theme.secondary(formatTokens((Number(cw.total_input_tokens) || 0) + (Number(cw.total_output_tokens) || 0)))
+    const glyph = theme.glyph('tokens')
+    const n = formatTokens((Number(cw.total_input_tokens) || 0) + (Number(cw.total_output_tokens) || 0))
+    // Yellow is the tokens field's identity hue — it does not vary with the
+    // count. There is no "too many tokens" threshold to warn about here (the
+    // context gauge already owns that signal), so this is a label, not a gauge.
+    return `${glyph ? glyph + ' ' : ''}${theme.color('yellow', n)}`
   },
 }
 
@@ -24,35 +29,31 @@ export const remaining = {
 export const duration = {
   id: 'duration', section: 'usage',
   isAvailable: (input) => input?.cost?.total_duration_ms != null,
-  format: (input, theme) => `${theme.glyph('duration') ? theme.glyph('duration') + ' ' : ''}${theme.secondary(formatDuration(input.cost.total_duration_ms))}`,
+  format: (input, theme) => `${theme.glyph('duration') ? theme.glyph('duration') + ' ' : ''}${theme.primary(formatDuration(input.cost.total_duration_ms))}`,
 }
 
 export const cost = {
   id: 'cost', section: 'usage',
   isAvailable: (input) => input?.cost?.total_cost_usd != null,
-  format: (input, theme) => theme.secondary(`$${Number(input.cost.total_cost_usd).toFixed(2)}`),
+  format: (input, theme) => theme.primary(`$${Number(input.cost.total_cost_usd).toFixed(2)}`),
 }
 
 // The two independent toggles' defaults now live in the segment-options registry
 // (segments/options.js: fiveHour = time-only, weekly = time + percent), so config,
 // the TUI, and this format share one source of truth.
 
-// Countdown tone, by TIME REMAINING — and deliberately only two warm steps.
-// Neutral (no colour) while the reset is far off, yellow inside 90 min, orange
-// inside 45 min. It never goes red: red means "you're about to run out", but an
-// imminent reset is the opposite — relief. A passed reset (`reset due`) also
-// stays neutral, since per the investigation that state is usually a stale
-// post-/clear snapshot, not an emergency.
-function resetTone(ms) {
-  if (ms <= 0) return null // reset due → neutral, never an alarm colour
-  const min = ms / 60_000
-  if (min <= 45) return 'orange'
-  if (min <= 90) return 'yellow'
-  return null // far off → calm
-}
+// The countdown is GREEN, always — it has no urgency ramp, and that is the point.
+//
+// It counts down to the moment your quota RESETS, so a small number is good news,
+// not bad. The old ramp (neutral → yellow → orange as the reset neared) inverted
+// that: it painted approaching relief as approaching danger. The urgency signal
+// for this window already exists and lives next door — `used_percentage`, which
+// keeps its green/yellow/red ramp below. So the countdown is free to be a calm,
+// stable field marker, and green is its identity hue.
 
-// Percent tone, by USAGE — the same green/yellow/red thresholds the context
-// gauge uses, so one mental model (green plenty → red nearly full) spans the line.
+// Percent tone, by USAGE — the same green/yellow/red thresholds the context bar
+// uses, so one mental model (green plenty → red nearly full) spans the line. This
+// is the only place in the rate-limit window where colour means "state".
 const usageTone = (pct) => (pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green')
 
 // Rate-limit windows (Pro/Max only, and absent until the first API response).
@@ -82,19 +83,22 @@ function limit(id, key) {
       if (showTime && rl.resets_at != null) {
         // resets_at is Unix epoch SECONDS; input.now is Date.now() ms → convert before diffing.
         const ms = rl.resets_at * 1000 - input.now
-        const tone = resetTone(ms)
-        // Neutral (far off / reset due) is identity-toned; only the warm steps take colour.
-        parts.push(tone ? theme.color(tone, formatCountdown(ms)) : theme.primary(formatCountdown(ms)))
+        parts.push(theme.color('green', formatCountdown(ms)))
       }
       if (showPercent && rl.used_percentage != null) {
         const pct = Math.round(rl.used_percentage)
         parts.push(theme.color(usageTone(pct), `${pct}%`))
       }
       if (parts.length === 0) return ''
+      // The marker takes the countdown's green so the timer reads as one object
+      // (glyph + digits), exactly as the reference line drew it. `wk` is a word,
+      // not a value, so it stays chrome-dim.
+      const m = marker(theme)
+      const head = id === 'weekly' ? theme.secondary(m) : theme.color('green', m)
       // The ` · ` between parts is chrome, not state, so it's dimmed like the
       // other separators — otherwise it sits outside every SGR and glares white
       // on a dark theme while its neighbours recede. (Plain when colors are off.)
-      return `${theme.secondary(marker(theme))} ${parts.join(theme.color('dim', ' · '))}`
+      return `${head} ${parts.join(theme.color('dim', ' · '))}`
     },
   }
 }

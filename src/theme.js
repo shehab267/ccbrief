@@ -1,30 +1,29 @@
 // ANSI colors + glyph tables. `ascii` mode is the guaranteed-safe fallback —
 // emoji and Nerd Font glyph widths vary across terminals, so ascii is always kept.
 
-// Accents are 24-bit TRUECOLOR (`38;2;r;g;b`), not the ANSI palette slots (the
-// 90s): a palette slot is only a *name* the user's terminal theme maps to its
-// own hue, so the same "green" looked lime in one terminal and forest in another
-// — the exact cross-terminal drift we're removing. Pinning RGB makes every
-// state colour identical on any terminal (the "same experience for all users"
-// goal). 24-bit is near-universal on the terminals that run Claude Code; a rare
-// terminal without it just ignores the sequence and shows plain readable text.
-// Values are sampled from the terminal rendering the user finds easy on the eyes
-// (a lime green, a vivid red, a warm gold), so the palette reproduces what reads
-// well to them rather than an arbitrary set; `orange` is a derived amber, one
-// step warmer than `yellow`. The reset countdown warms yellow → `orange` but
-// never to red — an imminent reset is relief, not danger — so the alarm reds
-// have no caller and stay absent.
+// Accents are the NORMAL ANSI palette slots (31-36) — deliberately not 24-bit
+// truecolor, and deliberately not the bright slots (90-97).
 //
-// `dim`/`bold` deliberately STAY as SGR attributes, not RGB: `dim` (SGR 2) is
-// the muted grey for identity text and separators, and it must *adapt* to the
-// user's background (softens relative to it, never inverts on a light theme). A
-// hardcoded grey would ignore the background and risk vanishing on a matching
-// one — so only the state colours are pinned; the chrome keeps adapting.
+// A palette slot is a *name* the user's terminal theme resolves against its own
+// background, so slot 32 is a green the theme already guarantees is legible on
+// ITS background — dark or light. Pinned RGB cannot make that guarantee: a lime
+// tuned against a black terminal is unreadable on a white one, and it overrides
+// a palette the user deliberately chose. The bright slots are the same trap in
+// miniature: they are *defined* as lighter, so they wash out on a light
+// background. Restricting accents to the normal slots is what keeps the line
+// readable under both themes. (`orange` has no palette slot, and its only caller
+// — the countdown's urgency ramp — is gone, so it's dropped.)
+//
+// `dim`/`bold` stay SGR *attributes* rather than colours: both are defined
+// relative to the current foreground, so they adapt to any background. `dim` is
+// the chrome grey; `bold` lifts a hue without hardcoding a brighter one.
 const SGR = {
   dim: 2, bold: 1,
-  red: '38;2;236;37;61', green: '38;2;169;222;90', yellow: '38;2;245;203;65',
-  blue: '38;2;88;166;255', magenta: '38;2;188;140;255', cyan: '38;2;57;197;207',
-  orange: '38;2;239;157;43',
+  red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, cyan: 36,
+  // Bold cyan stands in for bright cyan (96), which is what the reference line
+  // used for the model. Same hue, lifted relative to the foreground instead of
+  // hardcoded lighter — so it survives a light background.
+  cyanBold: '1;36',
 }
 
 // Four glyph modes. `simple` is the DEFAULT and the only one identical for every
@@ -32,16 +31,22 @@ const SGR = {
 // fonts) — just text plus the one monochrome symbol every font ships, the ⧗
 // reset timer. `emoji` looks richest but each OS draws its own artwork and width.
 // `nerd-font` renders blank unless a patched Nerd Font is installed. `ascii` is
-// the pure-ASCII floor (no box-drawing at all). `reset` is a sand-timer (⧗, not
-// the ⏳ emoji) so the countdown segment can paint it with its urgency colour.
+// the pure-ASCII floor (no box-drawing at all).
+//
+// The countdown carries a timer in every mode, but a *different* one per mode,
+// and that split is the cross-terminal fallback: `emoji` gets the ⏳ of the
+// reference line, while `simple` — the default — keeps ⧗, a monochrome symbol
+// every font ships and every terminal draws single-width. ⏳ is an emoji, so its
+// artwork and column width are the terminal's choice. The rich glyph is opt-in;
+// nobody lands on tofu by default.
 const GLYPHS = {
-  simple:      { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⧗' },
-  emoji:       { branch: '🌿', duration: '⏱', cost: '💰', effort: '⚡', model: '🧠', thinking: '💭', pr: '🔎', worktree: '🌲', reset: '⧗' },
+  simple:      { branch: '', tokens: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⧗' },
+  emoji:       { branch: '🌿', tokens: '🔸', duration: '⏱', cost: '💰', effort: '⚡', model: '🧠', thinking: '💭', pr: '🔎', worktree: '🌲', reset: '⏳' },
   // Nerd Font Private-Use code points (Powerline + Font Awesome ranges) — render
   // ONLY with a Nerd Font installed, else blank; the TUI labels this mode and its
   // live preview is the real check. Unverifiable here (no Nerd Font on this box).
-  'nerd-font': { branch: '\ue0a0', duration: '\uf017', cost: '\uf155', effort: '\uf0e7', model: '\uf2db', thinking: '\uf075', pr: '\uf002', worktree: '\uf1bb', reset: '⧗' },
-  ascii:       { branch: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '' },
+  'nerd-font': { branch: '\ue0a0', tokens: '', duration: '\uf017', cost: '\uf155', effort: '\uf0e7', model: '\uf2db', thinking: '\uf075', pr: '\uf002', worktree: '\uf1bb', reset: '⧗' },
+  ascii:       { branch: '', tokens: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '' },
 }
 
 const BAR = {
@@ -72,18 +77,23 @@ export function makeTheme({ glyphs = 'simple', colors = true, icons = true } = {
       if (!colors || !SGR[name]) return str
       return `\x1b[${SGR[name]}m${str}\x1b[0m`
     },
-    // Two registers now: muted grey text, and bright colour reserved for state.
-    // Identity text is toned to grey with `dim` (SGR 2) rather than left at the
-    // terminal's default foreground — that default is a glaring pure-white on
-    // most dark themes. `dim` softens it *relative to the background* instead of
-    // hardcoding a light colour, so it never inverts: still grey-not-white on
-    // dark, still readable on light. State colour (gauge, urgency, +/- diffs) is
-    // the only thing that stays bright, so the eye goes straight to it.
+    // Identity text sits at the terminal's DEFAULT foreground — no escape at all.
+    //
+    // This used to be `dim`, on the theory that the default is a glaring white.
+    // It isn't: the default foreground is the colour the user picked to read text
+    // in, so it is the one value guaranteed legible on their background, dark or
+    // light. `dim` then subtracted contrast from it and left the line washed out.
+    // It's also the register the reference status line used (ANSI 37, the
+    // *normal* white — brighter than dim, softer than bright-white).
+    //
+    // The rule that replaces the old one: colour marks WHICH FIELD this is, dim
+    // is for chrome only, and information is never dimmed.
     primary(str) {
-      return this.color('dim', str)
+      return str
     },
-    // Supporting values (tokens, cost, duration) share the same muted grey — the
-    // colour that signals state is what should carry the eye, not the numbers.
+    // Chrome: separators, a bar's unspent run, and labels that merely *name* a
+    // value rather than being one. `dim` is defined relative to the foreground,
+    // so it recedes on any background without ever inverting.
     secondary(str) {
       return this.color('dim', str)
     },
