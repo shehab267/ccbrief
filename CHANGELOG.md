@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **README images, generated from the real renderer.** `npm run demo` feeds the
+  new `demo` fixture through `render()` and turns the ANSI it emits into HTML,
+  resolved against a real dark and a real light terminal palette — so the
+  published picture is the actual output rather than a mockup, and it shows the
+  same line staying legible on both themes. A test asserts the README's example
+  line is the render of that fixture, so the docs and the image cannot drift
+  away from what ccbrief prints.
+- **FAQ** in the README, covering the questions people actually arrive with —
+  chiefly why the context percentage disappears after `/compact`.
+
+### Changed
+- Package description and keywords now say what ccbrief shows (context, tokens,
+  cost, rate limits), not just that it is a status line.
+
 ## [0.2.0] — 2026-07-12
 
 First real release. `0.1.0` was a name-reservation placeholder; this is the
