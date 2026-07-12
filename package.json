@@ -1,6 +1,6 @@
 {
   "name": "ccbrief",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Minimal, configurable status line for Claude Code — context, tokens, cost and rate limits at a glance in your terminal.",
   "keywords": [
     "claude-code",

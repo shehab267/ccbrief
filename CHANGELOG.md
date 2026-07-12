@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-07-13
+
+Documentation only — no change to the renderer, the CLI, or the installed output.
+Published so the npm page carries the new README and description, which it only
+picks up on a release.
+
 ### Added
 - **README images, generated from the real renderer.** `npm run demo` feeds the
   new `demo` fixture through `render()` and turns the ANSI it emits into HTML,
@@ -115,5 +121,6 @@ version that actually does something.
   control characters before rendering, and PR links are wrapped as terminal
   hyperlinks only for `http(s)` URLs.
 
-[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/shehab267/ccbrief/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/shehab267/ccbrief/releases/tag/v0.2.0
