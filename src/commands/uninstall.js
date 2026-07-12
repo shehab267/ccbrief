@@ -4,12 +4,42 @@ import { readdirSync, readFileSync, writeFileSync, rmSync, existsSync } from 'no
 import { join } from 'node:path'
 import { ownsStatusLine } from '../installer.js'
 
+// Every backup `init` left behind, newest first. The config dir may not exist at all —
+// a fresh machine, a custom CLAUDE_CONFIG_DIR, a folder deleted by hand — and an
+// unguarded readdirSync there threw ENOENT and took the whole command down with a raw
+// Node stack trace. Uninstall is the LAST thing a user sees; it does not get to crash.
+function backupsIn(dir) {
+  if (!existsSync(dir)) return []
+  try {
+    return readdirSync(dir)
+      .filter((f) => f.startsWith('settings.json.bak.'))
+      .sort((a, b) => Number(b.split('.').pop()) - Number(a.split('.').pop()))
+  } catch {
+    return [] // unreadable dir → nothing to restore from, but still not a crash
+  }
+}
+
+// True when there is anything here to undo. The CLI asks this BEFORE prompting, so a
+// user with nothing installed is never asked whether to delete a directory that isn't
+// there.
+export function isInstalled(dir) {
+  return existsSync(join(dir, 'ccbrief')) || backupsIn(dir).length > 0 ||
+    (existsSync(join(dir, 'settings.json')) && ownsStatusLineAt(dir))
+}
+
+function ownsStatusLineAt(dir) {
+  try {
+    const settings = JSON.parse(readFileSync(join(dir, 'settings.json'), 'utf8'))
+    return ownsStatusLine(settings, join(dir, 'ccbrief'))
+  } catch {
+    return false
+  }
+}
+
 export async function runUninstall({ dir, removeDir = false, log = () => {} }) {
   const settingsPath = join(dir, 'settings.json')
   const ccbriefDir = join(dir, 'ccbrief')
-  const backups = readdirSync(dir)
-    .filter((f) => f.startsWith('settings.json.bak.'))
-    .sort((a, b) => Number(b.split('.').pop()) - Number(a.split('.').pop()))
+  const backups = backupsIn(dir)
 
   let restored = false
   let removedBlock = false
@@ -18,7 +48,7 @@ export async function runUninstall({ dir, removeDir = false, log = () => {} }) {
     const content = readFileSync(join(dir, backups[0]), 'utf8')
     writeFileSync(settingsPath, content)
     restored = true
-    log(`Restored ${backups[0]}`)
+    log(`Restored your previous settings.json (from ${backups[0]}).`)
     // A backup captured by an older, buggy init may still carry our own block —
     // strip it so restore actually removes ccbrief.
     try {
@@ -27,7 +57,7 @@ export async function runUninstall({ dir, removeDir = false, log = () => {} }) {
         delete s.statusLine
         writeFileSync(settingsPath, JSON.stringify(s, null, 2) + '\n')
         removedBlock = true
-        log('Stripped residual ccbrief statusLine from the restored backup')
+        log('Removed the leftover ccbrief statusLine from that backup.')
       }
     } catch { /* restored content not JSON → leave as-is */ }
   } else if (existsSync(settingsPath)) {
@@ -41,9 +71,18 @@ export async function runUninstall({ dir, removeDir = false, log = () => {} }) {
     delete settings.statusLine
     writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
     removedBlock = true
-    log('Removed statusLine block')
+    log('Removed the ccbrief statusLine from settings.json.')
   }
 
-  if (removeDir) rmSync(ccbriefDir, { recursive: true, force: true })
+  if (removeDir && existsSync(ccbriefDir)) {
+    rmSync(ccbriefDir, { recursive: true, force: true })
+    log(`Deleted ${ccbriefDir}`)
+  }
+
+  // Silence used to be the answer when there was nothing to do, which reads as a
+  // command that failed quietly. Say it plainly instead.
+  if (!restored && !removedBlock && !removeDir) log('ccbrief was not installed here — nothing to undo.')
+  else log('ccbrief has been removed.')
+
   return { restored, removedBlock }
 }
