@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-07-12
+
+First real release. `0.1.0` was a name-reservation placeholder; this is the
+version that actually does something.
+
 ### Added
 - **Status line renderer** — a single Node process that reads Claude Code's
   session JSON on stdin and emits the status line on stdout, replacing the
@@ -94,3 +99,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   renderer has zero runtime dependencies. Session-derived values are stripped of
   control characters before rendering, and PR links are wrapped as terminal
   hyperlinks only for `http(s)` URLs.
+
+[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/shehab267/ccbrief/releases/tag/v0.2.0
