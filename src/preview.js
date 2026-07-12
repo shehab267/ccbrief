@@ -14,8 +14,8 @@ export const PREVIEW_INPUT = {
   workspace: { current_dir: '/home/dev/ccbrief', repo: { name: 'ccbrief' } },
   git: { branch: 'main', added: 3, removed: 1 },
   model: { display_name: 'Opus' },
-  context_window: { used_percentage: 42, remaining_percentage: 58, total_input_tokens: 116_000, total_output_tokens: 12_000, current_usage: { input_tokens: 128_000 } },
-  cost: { total_duration_ms: 5_040_000, total_cost_usd: 1.23, total_lines_added: 120, total_lines_removed: 34 },
+  context_window: { used_percentage: 42, total_input_tokens: 116_000, total_output_tokens: 12_000, current_usage: { input_tokens: 128_000 } },
+  cost: { total_cost_usd: 1.23, total_lines_added: 120, total_lines_removed: 34 },
   effort: { level: 'high' },
   // resets_at is Unix epoch SECONDS; PREVIEW_INPUT.now is 0, so these are the
   // seconds-until-reset directly. Present so the preview shows the rate-limit
@@ -24,4 +24,14 @@ export const PREVIEW_INPUT = {
     five_hour: { used_percentage: 40, resets_at: 2 * 3600 },            // 2h out
     seven_day: { used_percentage: 62, resets_at: (3 * 24 + 4) * 3600 }, // ~3d 4h out
   },
+  // The five segments no preset ships. They are off by default, but the picker now
+  // lists them, so ticking one has to SHOW something — a segment whose source field
+  // is missing from this fixture would tick to a blank preview and read as broken.
+  // Shapes follow the documented statusLine payload exactly (docs.claude.com →
+  // statusline): `pr.review_state`, `worktree.name`, `output_style.name`, …
+  thinking: { enabled: true },
+  output_style: { name: 'concise' },
+  agent: { name: 'code-reviewer' },
+  pr: { number: 42, url: 'https://github.com/shehab267/ccbrief/pull/42', review_state: 'approved' },
+  worktree: { name: 'feature-xyz', path: '/home/dev/.claude/worktrees/feature-xyz' },
 }

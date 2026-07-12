@@ -40,7 +40,11 @@ test('s saves, writes config.json, and returns the saved config', async () => {
   const saved = await done
   assert.ok(saved, 'save must return the config so the caller can re-sync settings.json')
   assert.equal(saved.preset, 'standard')
-  assert.deepEqual(JSON.parse(readFileSync(join(dir, 'config.json'), 'utf8')), saved)
+  // The returned config carries the full segment list (the caller re-syncs settings.json
+  // from it); the FILE drops it, because `standard` derives its own. Everything else matches.
+  const { segments, ...rest } = saved
+  assert.ok(segments.length, 'the returned config keeps its segments')
+  assert.deepEqual(JSON.parse(readFileSync(join(dir, 'config.json'), 'utf8')), rest)
 })
 
 // Esc is the first byte of every arrow-key sequence. In raw mode an arrow arrives

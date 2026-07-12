@@ -4,11 +4,9 @@
 import { BY_ID, optionsFor } from './segments/index.js'
 
 export const PRESETS = {
-  // standard leads with the 5-hour window instead of the session clock: two
-  // clocks side by side was the exact confusion the limits redesign removed, and
-  // `duration` stays one keystroke away in the TUI. Pro/Max-first by design — on
-  // the free tier (and the first render of any session, before rate_limits
-  // arrives) this slot is simply empty rather than a second, unrelated timer.
+  // standard is the four things you actually look at. It leads with the 5-hour
+  // window, which is Pro/Max-first by design — on the free tier (and on the first
+  // render of any session, before rate_limits arrives) that slot is simply empty.
   standard: ['repo', 'context', 'fiveHour', 'model'],
   detailed: ['directory', 'repo', 'lines', 'context', 'tokens', 'cost', 'fiveHour', 'weekly', 'effort', 'model'],
 }
@@ -38,6 +36,11 @@ function withOptions(id, src = {}) {
 // `minimal` — so "invalid → defaults" stays literally true.
 export const DEFAULT_PRESET = 'standard'
 
+// No `segments` key, deliberately. A named preset DERIVES its segment list (see
+// loadConfig), so a list written next to `"preset": "standard"` is inert — editing
+// it changes nothing, which is a trap for anyone who opens the file expecting it to.
+// `segments` is written only when `preset` is `custom`, the one case that reads it.
+// Discovering segments is the picker's job now, not the config file's.
 export const DEFAULT_CONFIG = {
   version: 1,
   preset: DEFAULT_PRESET,
@@ -46,8 +49,12 @@ export const DEFAULT_CONFIG = {
   symbols: 'simple',
   colors: true,
   icons: true,
-  segments: PRESETS[DEFAULT_PRESET].map((id) => withOptions(id)),
 }
+
+// The segment list a named preset stands for. One definition, shared by the loader
+// and the picker, so "what does `standard` mean" is answered in exactly one place.
+export const segmentsOf = (preset) =>
+  (PRESETS[preset] ?? PRESETS[DEFAULT_PRESET]).map((id) => withOptions(id))
 
 // `simple` is the default and the safe fallback: the only symbol set identical
 // for every user (text + universal characters), so an unknown/legacy value degrades
@@ -55,8 +62,10 @@ export const DEFAULT_CONFIG = {
 const SYMBOLS = new Set(['simple', 'emoji', 'nerd-font', 'ascii'])
 const LAYOUTS = new Set(['auto', 'single-line', 'multi-line'])
 const PRESET_NAMES = new Set([...Object.keys(PRESETS), 'custom'])
-// Segments whose value changes over time → they drive refreshInterval.
-const TIME_BASED = new Set(['duration', 'fiveHour', 'weekly'])
+// Segments whose value changes over time → they drive refreshInterval. Only the
+// two rate-limit countdowns tick on their own now; everything else changes only
+// when Claude Code sends a new session payload, which already triggers a render.
+const TIME_BASED = new Set(['fiveHour', 'weekly'])
 
 const oneOf = (v, set, fallback) => (set.has(v) ? v : fallback)
 
@@ -75,14 +84,17 @@ export function loadConfig(raw) {
 
   let segments
   if (preset === 'custom') {
-    const provided = Array.isArray(r.segments) ? r.segments : DEFAULT_CONFIG.segments
+    // Unknown ids are dropped, not errors — that is how a config naming a segment
+    // this version no longer ships (`duration`, `remaining`) keeps working instead
+    // of taking the status line down with it.
+    const provided = Array.isArray(r.segments) ? r.segments : segmentsOf(DEFAULT_PRESET)
     segments = provided
       .filter((s) => s && BY_ID[s.id])
       .map((s) => withOptions(s.id, s))
   } else {
     // A named preset derives its segment list (with its option defaults); stray
     // `segments` are ignored.
-    segments = PRESETS[preset].map((id) => withOptions(id))
+    segments = segmentsOf(preset)
   }
   return { version: 1, preset, layout, maxRows, symbols, colors, icons, segments }
 }

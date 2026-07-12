@@ -1,6 +1,6 @@
-// Usage segments: token counts, remaining %, duration, cost, and the Pro/Max
-// rate-limit windows. Each hides when its source field is null/absent.
-import { formatDuration, formatCountdown, formatTokens } from '../format.js'
+// Usage segments: token counts, cost, and the Pro/Max rate-limit windows. Each
+// hides when its source field is null/absent.
+import { formatCountdown, formatTokens } from '../format.js'
 import { optionDefaults } from './options.js'
 
 export const tokens = {
@@ -19,17 +19,11 @@ export const tokens = {
   },
 }
 
-export const remaining = {
-  id: 'remaining', title: 'context left', section: 'usage',
-  isAvailable: (input) => input?.context_window?.remaining_percentage != null,
-  format: (input, theme) => theme.primary(`${Math.round(input.context_window.remaining_percentage)}% left`),
-}
-
-export const duration = {
-  id: 'duration', title: 'session time', section: 'usage',
-  isAvailable: (input) => input?.cost?.total_duration_ms != null,
-  format: (input, theme) => `${theme.icon('duration')}${theme.primary(formatDuration(input.cost.total_duration_ms))}`,
-}
+// `remaining` and `duration` used to live here. Both are gone, and neither is a
+// loss: `remaining` was 100 minus `context`, printed a second time in words, and
+// `duration` was a wall-clock that ticks whether or not you are working. Claude
+// Code still reports both fields; ccbrief simply has nothing to say with them.
+// An old config naming either id drops it on load (loadConfig keeps only known ids).
 
 export const cost = {
   id: 'cost', title: 'session cost', section: 'usage',

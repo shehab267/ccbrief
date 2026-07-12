@@ -28,11 +28,18 @@ export const pr = {
   },
 }
 
+// Claude Code reports a worktree two different ways, and which one you get depends
+// on how you entered it: a `--worktree` session carries the full `worktree` object
+// (name, path, branch), while plain `git worktree add` only sets the string
+// `workspace.git_worktree`. Read the richest source first and fall back — otherwise
+// the segment works in one kind of worktree and silently hides in the other.
+// basename() over the lot: `worktree.name` and `workspace.git_worktree` are already
+// bare names, `worktree.path` is a full path, and basename leaves the first two alone.
+const worktreeName = (input) =>
+  basename(input?.worktree?.name || input?.worktree?.path || input?.workspace?.git_worktree || '')
+
 export const worktree = {
   id: 'worktree', title: 'git worktree', section: 'development',
-  isAvailable: (input) => Boolean(input?.workspace?.git_worktree || input?.worktree?.path),
-  format: (input, theme) => {
-    const p = input.workspace?.git_worktree || input.worktree?.path
-    return `${theme.icon('worktree')}${theme.primary(clean(basename(p)))}`
-  },
+  isAvailable: (input) => Boolean(worktreeName(input)),
+  format: (input, theme) => `${theme.icon('worktree')}${theme.primary(clean(worktreeName(input)))}`,
 }

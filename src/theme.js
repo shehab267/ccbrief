@@ -41,13 +41,13 @@ const SGR = {
 // artwork and column width are the terminal's choice. The rich symbol is opt-in;
 // nobody lands on tofu by default.
 const SYMBOLS = {
-  simple:      { branch: '', tokens: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⧗' },
-  emoji:       { branch: '🌿', tokens: '🔸', duration: '⏱', cost: '💰', effort: '⚡', model: '🧠', thinking: '💭', pr: '🔎', worktree: '🌲', reset: '⏳' },
+  simple:      { branch: '', tokens: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⧗' },
+  emoji:       { branch: '🌿', tokens: '🔸', cost: '💰', effort: '⚡', model: '🧠', thinking: '💭', pr: '🔎', worktree: '🌲', reset: '⏳' },
   // Nerd Font Private-Use code points (Powerline + Font Awesome ranges) — render
-  // ONLY with a Nerd Font installed, else blank; the TUI labels this mode and its
+  // ONLY with a Nerd Font installed, else blank; the picker labels this mode and its
   // live preview is the real check. Unverifiable here (no Nerd Font on this box).
-  'nerd-font': { branch: '\ue0a0', tokens: '', duration: '\uf017', cost: '\uf155', effort: '\uf0e7', model: '\uf2db', thinking: '\uf075', pr: '\uf002', worktree: '\uf1bb', reset: '⧗' },
-  ascii:       { branch: '', tokens: '', duration: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '' },
+  'nerd-font': { branch: '\ue0a0', tokens: '', cost: '\uf155', effort: '\uf0e7', model: '\uf2db', thinking: '\uf075', pr: '\uf002', worktree: '\uf1bb', reset: '⧗' },
+  ascii:       { branch: '', tokens: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '' },
 }
 
 const BAR = {

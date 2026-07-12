@@ -4,6 +4,22 @@ import { renderPanel, renderMarks, optionHint, PREVIEW_INPUT } from '../src/tui/
 import { initialState, reduce, stateToConfig } from '../src/tui/state.js'
 import { loadConfig } from '../src/config.js'
 import { render } from '../src/render.js'
+import { visibleWidth } from '../src/width.js'
+import { SEGMENTS, optionDefaults } from '../src/segments/index.js'
+import { makeTheme } from '../src/theme.js'
+
+// The picker now lists EVERY segment, so every segment must show something when you
+// tick it. One whose source field is missing from PREVIEW_INPUT would tick to a blank
+// preview and read as broken — which is exactly what pr / worktree / thinking /
+// outputStyle / agent would have done. This is the test that keeps the fixture honest
+// as segments are added.
+test('every segment in the catalog renders something in the preview', () => {
+  const theme = makeTheme({ colors: false })
+  for (const seg of SEGMENTS) {
+    assert.ok(seg.isAvailable(PREVIEW_INPUT), `${seg.id}: no source data in PREVIEW_INPUT`)
+    assert.ok(seg.format(PREVIEW_INPUT, theme, optionDefaults(seg.id)).length > 0, `${seg.id}: previews empty`)
+  }
+})
 
 test('preview line equals render() output (WYSIWYG)', () => {
   const state = initialState(loadConfig({ preset: 'standard', colors: false }))
@@ -31,18 +47,34 @@ test('panel labels the symbol set with its portability note', () => {
 
 // The keymap footer is static — no toggle keys are crammed into it; they get a
 // dedicated plain-language tip instead. So no `[t]`/`[%]`/`[d]`/`[t/%]` here.
-test('footer keymap never advertises the per-segment toggle keys', () => {
+test('the keymap never advertises the per-segment toggle keys', () => {
   const state = initialState(loadConfig({ preset: 'detailed', colors: false }))
-  const footer = renderPanel(state, { columns: 160 }).split('\n').at(-1)
-  for (const k of ['[t]', '[%]', '[d]', '[t/%]']) assert.ok(!footer.includes(k))
+  const panel = renderPanel(state, { columns: 160 })
+  for (const k of ['[t]', '[%]', '[d]', '[t/%]']) assert.ok(!panel.includes(k))
 })
 
 // Esc is the key people reach for to back out of a TUI, so it quits alongside q —
 // and the footer has to say so, or the key may as well not exist.
-test('footer keymap advertises esc as a way to quit', () => {
+test('the keymap advertises esc as a way to quit', () => {
   const state = initialState(loadConfig({ preset: 'detailed', colors: false }))
-  const footer = renderPanel(state, { columns: 160 }).split('\n').at(-1)
-  assert.ok(/\[esc\/q\] quit/.test(footer), footer)
+  const panel = renderPanel(state, { columns: 160 })
+  assert.ok(/\[esc\] quit/.test(panel), panel)
+})
+
+// The rule above the list is the only thing that says the unticked rows are an OFFER
+// and not leftovers — that this picker can add, not just subtract.
+test('the panel says how many of the whole catalog are shown', () => {
+  const state = initialState(loadConfig({ preset: 'standard', colors: false }))
+  assert.ok(/Segments — 4 of 15 shown/.test(renderPanel(state, { columns: 80 })), renderPanel(state, { columns: 80 }))
+})
+
+// Every keymap line has to fit the terminal it is printed on. One 108-column line
+// wrapped on anything narrower, which is most terminals.
+test('no keymap line overflows 80 columns', () => {
+  const state = initialState(loadConfig({ preset: 'detailed' }))
+  for (const line of renderPanel(state, { columns: 80 }).split('\n')) {
+    if (line.startsWith('[')) assert.ok(visibleWidth(line) <= 80, `${visibleWidth(line)}: ${line}`)
+  }
 })
 
 // The toggle keys live in a one-line, plain-language tip that reads as guidance:
