@@ -1,11 +1,21 @@
 name: Publish
 
-# Manual trigger only: no publish happens until you deliberately run this workflow
-# from the Actions tab. Matches the release order — publish via OIDC, then tag, then
-# cut the GitHub Release. Switch to `on: release: types: [published]` later if you
-# want release-triggered publishing.
+# Publishing is the only irreversible thing this repo does: a version, once on npm, is
+# public forever and cannot be meaningfully taken back. So this workflow publishes one
+# thing and one thing only — the code at a tag, whose version matches that tag.
+#
+# Cutting a GitHub Release is the trigger, because the tag is the record of what was
+# released. workflow_dispatch is the escape hatch, and it takes the tag by name rather
+# than publishing whatever happens to be at the tip of a branch — see the checkout below.
 on:
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish, e.g. v0.3.0 (must already exist)'
+        required: true
+        type: string
 
 # One publish at a time.
 concurrency:
@@ -14,24 +24,75 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write # required for npm Trusted Publishing (OIDC) + auto-provenance
+  id-token: write # npm Trusted Publishing (OIDC). This is what replaces NPM_TOKEN.
 
 jobs:
   publish:
     name: publish to npm
+    # Trusted publishing does not support self-hosted runners.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Check out the TAG, never a branch tip. On a release event github.sha is already
+      # the tagged commit, but a dispatch would otherwise get whatever main has drifted
+      # to since — which is how you publish code that was never in the release you named.
+      - name: work out what we are publishing
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = 'release' ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          node-version: 22 # latest 22.x is >= 22.14, the floor for trusted publishing
+          ref: refs/tags/${{ steps.target.outputs.tag }}
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 22 # >= 22.14 is the floor for trusted publishing
           registry-url: https://registry.npmjs.org
-      # Node 22 ships npm 10, but Trusted Publishing needs npm >= 11.5.1.
+          # This job holds id-token: write and can push to the registry. It is the last
+          # place to restore a dependency cache that another workflow populated.
+          package-manager-cache: false
+
+      # Node 22 ships npm 10; trusted publishing needs >= 11.5.1.
       - run: npm i -g npm@latest
+
+      # The guard. Without it a forgotten version bump publishes 0.3.0's code under the
+      # 0.2.0 tag — or silently republishes — and neither is recoverable once it is out.
+      - name: the version must be the one that was tagged, and must be new
+        run: |
+          TAG='${{ steps.target.outputs.tag }}'
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "tag: $TAG · package.json: $VERSION"
+
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::tag $TAG does not match package.json v$VERSION — one of them is wrong"
+            exit 1
+          fi
+
+          # npm view prints nothing (and may exit non-zero) for a version that isn't there.
+          if [ -n "$(npm view "ccbrief@$VERSION" version 2>/dev/null || true)" ]; then
+            echo "::error::ccbrief@$VERSION is already on npm — versions are immutable, bump it"
+            exit 1
+          fi
+
       - run: npm ci
-      # Fail before touching the registry if tests break or the files allowlist is wrong.
+
+      # Fail before touching the registry, not after: a broken test or a files allowlist
+      # that drops dist/ would otherwise ship a package that installs and renders nothing.
       - run: npm test
       - run: npm pack --dry-run
-      # No NODE_AUTH_TOKEN: OIDC authenticates the runner and provenance is generated
-      # automatically. Requires a trusted publisher configured for this package on npmjs.com.
+
+      # No NODE_AUTH_TOKEN and no --provenance: OIDC authenticates the runner, and npm
+      # generates the provenance attestation automatically for a trusted publish.
+      #
+      # This step fails until a trusted publisher is configured for ccbrief on npmjs.com
+      # (package → Settings → Trusted Publisher → GitHub Actions; workflow filename is
+      # `publish.yml`, not the full path; leave Environment blank to match this job).
+      # It fails *before* anything reaches the registry, so a missing config ships nothing.
       - run: npm publish
+
+      - name: say what went out
+        run: echo "Published \`ccbrief@$(node -p "require('./package.json').version")\` from \`${{ steps.target.outputs.tag }}\` with provenance." >> "$GITHUB_STEP_SUMMARY"
