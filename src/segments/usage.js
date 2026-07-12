@@ -63,6 +63,9 @@ const usageTone = (pct) => (pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green')
 // fabricate a 0% or a NaN countdown. Both parts off, or both sources null → ''
 // → render() treats it as hidden, leaving no stray separator.
 function limit(id, key) {
+  // Hoisted: these are constants, and format() runs on every render. (core.js does
+  // the same for REPO_DEFAULTS — keep the two files agreeing on the idiom.)
+  const D = optionDefaults(id)
   // The head of the window: its marker plus the gap before the first value.
   //
   // Session wears the ⧗/⏳ timer in the countdown's green, so glyph and digits read
@@ -84,9 +87,8 @@ function limit(id, key) {
     },
     format: (input, theme, entry) => {
       const rl = input.rate_limits[key]
-      const d = optionDefaults(id)
-      const showTime = entry?.showTime ?? d.showTime
-      const showPercent = entry?.showPercent ?? d.showPercent
+      const showTime = entry?.showTime ?? D.showTime
+      const showPercent = entry?.showPercent ?? D.showPercent
       const parts = []
       if (showTime && rl.resets_at != null) {
         // resets_at is Unix epoch SECONDS; input.now is Date.now() ms → convert before diffing.

@@ -1,5 +1,6 @@
 // ANSI colors + glyph tables. `ascii` mode is the guaranteed-safe fallback —
 // emoji and Nerd Font glyph widths vary across terminals, so ascii is always kept.
+import { visibleWidth } from './width.js'
 
 // Accents are the NORMAL ANSI palette slots (31-36) — deliberately not 24-bit
 // truecolor, and deliberately not the bright slots (90-97).
@@ -62,11 +63,6 @@ export function makeTheme({ glyphs = 'simple', colors = true, icons = true } = {
   const mode = GLYPHS[glyphs] ? glyphs : 'simple'
   const bars = BAR[mode]
   const rawSep = SEP[mode]
-  // The gap between a glyph and the value it labels. Emoji are DOUBLE-width: the
-  // terminal already reserves a trailing column the artwork doesn't fill, so a
-  // space on top of that double-spaces the icon away from its value. Every other
-  // mode's glyphs (⧗, Nerd Font points) are single-width and still need the space.
-  const iconGap = mode === 'emoji' ? '' : ' '
   return {
     colors,
     icons,
@@ -79,13 +75,20 @@ export function makeTheme({ glyphs = 'simple', colors = true, icons = true } = {
       return GLYPHS[mode][name] ?? ''
     },
     // A glyph together with the gap that follows it — the ONE place that decides
-    // icon spacing, so no segment re-invents it. Empty (no leading space) when
-    // the glyph is absent, so a mode with no icon leaves no hole. `tone` colours
-    // the glyph only, never the value beside it.
+    // icon spacing, so no segment re-invents it. Empty (no leading space) when the
+    // glyph is absent, so a mode with no icon leaves no hole. `tone` colours the
+    // glyph only, never the value beside it.
+    //
+    // The gap comes from the glyph's MEASURED width, not from the mode name. A
+    // double-width glyph (every emoji) already occupies a trailing column its
+    // artwork doesn't fill, so a space on top double-spaces it from its value;
+    // anything single-width (⧗, Nerd Font points) still needs one. Measuring says
+    // exactly that, where `mode === 'emoji'` only guesses it — and would jam any
+    // single-width glyph later added to the emoji table.
     icon(name, tone) {
       const g = this.glyph(name)
       if (!g) return ''
-      return (tone ? this.color(tone, g) : g) + iconGap
+      return (tone ? this.color(tone, g) : g) + (visibleWidth(g) > 1 ? '' : ' ')
     },
     color(name, str) {
       if (!colors || !SGR[name]) return str
@@ -120,7 +123,8 @@ export function makeTheme({ glyphs = 'simple', colors = true, icons = true } = {
       const full = bars.full.repeat(filled)
       const empty = bars.empty.repeat(width - filled)
       if (!colors || !tone) return full + empty
-      return this.color(tone, full) + this.color('dim', empty)
+      // `empty` is '' at 100% — wrapping that would emit a dangling \x1b[2m\x1b[0m.
+      return this.color(tone, full) + (empty ? this.color('dim', empty) : '')
     },
   }
 }
