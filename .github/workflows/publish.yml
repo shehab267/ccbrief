@@ -80,6 +80,12 @@ jobs:
 
       - run: npm ci
 
+      # Build before testing, explicitly, even though package.json now does it in pretest:
+      # this job checks out a TAG, and a tag cut before that hook existed does not have it.
+      # The workflow has to be able to publish any tag it is pointed at, not only the ones
+      # newer than itself.
+      - run: npm run build
+
       # Fail before touching the registry, not after: a broken test or a files allowlist
       # that drops dist/ would otherwise ship a package that installs and renders nothing.
       - run: npm test
