@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-07-13
+
+### Fixed
+- **Widths are measured by `string-width` 8**, which corrects how Hangul graphemes and
+  spacing marks are counted. The renderer packs segments against the terminal's real
+  width, so a character measured a column too narrow is a status line that wraps when it
+  promised not to — which mattered to anyone with Korean or Thai text in a branch name or
+  a path. Every segment ccbrief ships renders identically before and after; this only
+  changes the cases the old measurements got wrong.
+
+### Changed
+- The bundler is esbuild 0.28. It builds the renderer that gets installed, so it is named
+  here even though it never appears in a dependency tree of yours.
+
 ## [0.3.0] — 2026-07-13
 
 The release that makes the tool honest about itself: every segment it ships can
@@ -197,6 +211,7 @@ version that actually does something.
   control characters before rendering, and PR links are wrapped as terminal
   hyperlinks only for `http(s)` URLs.
 
-[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/shehab267/ccbrief/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/shehab267/ccbrief/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/shehab267/ccbrief/releases/tag/v0.2.0
