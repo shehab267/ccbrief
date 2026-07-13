@@ -15,14 +15,19 @@ updates:
       actions:
         patterns: ['*']
 
-  # The renderer ships with zero runtime dependencies and the rest is devDependencies, so
-  # this is a small surface — but esbuild builds the bundle users actually run.
+  # Split by dependency-type, not into one bucket. string-width is a *runtime* dependency
+  # — esbuild inlines it into the renderer users actually run — so a bump to it changes the
+  # shipped artifact and the layout engine's width maths. Grouped with the tooling, that
+  # arrives in a PR titled "bump the dev group", which is how a change to what users run
+  # gets waved through as housekeeping. It now says which one it is.
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: monthly
-    commit-message:
-      prefix: chore
     groups:
-      dev:
+      runtime:
+        dependency-type: production
+        patterns: ['*']
+      tooling:
+        dependency-type: development
         patterns: ['*']
