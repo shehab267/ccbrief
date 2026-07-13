@@ -38,7 +38,6 @@ export function nextSteps({ preview, configPath, fresh = true }) {
     '',
     '  What to do next',
     '    npx ccbrief config      choose what it shows, with a live preview',
-    '    npx ccbrief uninstall   remove it and put your settings back',
     '',
     `  Config file: ${configPath}`,
     '',

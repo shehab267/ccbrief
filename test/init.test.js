@@ -108,7 +108,7 @@ test('init tells the user what to do next, not just what it rendered', async () 
 
   assert.match(out, /ccbrief installed/)
   assert.match(out, /npx ccbrief config/)      // how to change it
-  assert.match(out, /npx ccbrief uninstall/)   // how to undo it
+  assert.doesNotMatch(out, /uninstall/)        // the welcome is not the place to pitch leaving
   assert.match(out, /no restart needed/i)      // the documented behaviour, stated
   assert.match(out, /config\.json/)            // where the config lives
   assert.match(out, /42%/)                     // and the preview is still there
