@@ -30,7 +30,7 @@ export const demo = {
   session_id: 'sess-demo',
   workspace: { current_dir: '/home/dev/ccbrief', repo: { name: 'ccbrief' } },
   git: { branch: 'main', added: 3, removed: 1 },
-  model: { display_name: 'Opus' },
+  model: { display_name: 'Opus 5.5' },
   context_window: {
     used_percentage: 42,
     remaining_percentage: 58,
