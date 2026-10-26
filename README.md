@@ -13,7 +13,7 @@ usage with a bar, tokens, session cost, 5-hour and weekly rate-limit resets, rea
 active model — the same line rendered on a dark and a light terminal theme.](https://raw.githubusercontent.com/shehab267/ccbrief/main/assets/ccbrief-claude-code-statusline.png)
 
 ```
-ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
+ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
 ```
 
 <sub>One line, shown above on a dark and a light terminal — the same colors, resolved by each theme.
@@ -79,14 +79,14 @@ before removing the `~/.claude/ccbrief/` directory.
 is, when your limit resets and how much of it you've spent, and which model you're on.
 
 ```
-ccbrief/main │ 42% ━━━━───── │ ⧗ 2h 0m · 40% │ Opus
+ccbrief/main │ 42% ━━━━───── │ ⏳2h 0m · 40% │ Opus
 ```
 
 **Detailed** — everything ccbrief knows, one `p` away in the picker. Turn *off* what you don't want
 rather than hunt for what you're missing.
 
 ```
-ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
+ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
 ```
 
 Too wide for your terminal? ccbrief packs whole segments across up to three rows — it never splits a
@@ -94,7 +94,7 @@ segment or lets the terminal wrap mid-field:
 
 ```
 ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23
-⧗ 2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
+⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
 ```
 
 **A segment with no data is hidden, never faked.** Context % and rate limits are null early in a
@@ -184,7 +184,7 @@ Every segment hides itself when its data isn't there, so you only ever see live 
 | `context` | Context used, with a bar (`42% ━━━━─────`) | Null early in a session / after `/compact` |
 | `tokens` | Tokens in context (`128k`) | Before the first response / after `/compact` |
 | `cost` | Session cost (`$1.23`) | Absent |
-| `fiveHour` | Session limit — reset countdown + usage (`⧗ 2h 0m · 40%`) | Not on Pro/Max |
+| `fiveHour` | Session limit — reset countdown + usage (`⏳2h 0m · 40%`) | Not on Pro/Max |
 | `weekly` | Weekly limit — reset countdown + usage (`wk 3d 4h · 62%`) | Not on Pro/Max |
 | `lines` | Lines Claude added/removed this session (`+120/-34`) | Absent |
 | `effort` | Reasoning effort (`high`) | Absent |
@@ -213,18 +213,19 @@ Colors come from the **standard ANSI palette**, never hard-coded RGB — so your
 them against its own background and the line stays readable on **dark and light** themes alike.
 Nothing is dimmed except separators; information is never greyed out.
 
-Four symbol sets — they pick the icons, the bar characters and the separator. `simple` is the default
-because it's the only one that looks the same for everyone:
+Four symbol sets — they pick the icons, the bar characters and the separator. `simple` is the default:
+plain text plus the ⏳ timer, with no special font needed:
 
 ```
-simple    ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │ high │ Opus
+simple    ccbrief/main │ 42% ━━━━───── │ 128k │ ⏳2h 0m · 40% │ high │ Opus
 emoji     🌿ccbrief/main │ 42% ━━━━───── │ 🔸128k │ ⏳2h 0m · 40% │ ⚡high │ 🧠Opus
 nerd-font  ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │  high │  Opus
 ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m · 40% | high | Opus
 ```
 
 `nerd-font` **renders blank boxes unless you have a Nerd Font installed** — the picker labels it and
-the live preview shows you before you commit. `ascii` drops to plain `|` and `#`.
+the live preview shows you before you commit. `ascii` drops to plain `|` and `#`. If the ⏳ timer shows
+as a box, your terminal has no emoji font: pick `ascii`.
 
 Set `colors: false` or `icons: false` (or press `c` / `i` in the picker) to turn either off.
 

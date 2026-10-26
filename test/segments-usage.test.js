@@ -75,8 +75,11 @@ test('session marker is ⏳ in emoji mode, with no extra space before the time',
 })
 test('session marker falls back to S in ascii mode, and keeps its space', () => assert.equal(headOf(plain), 'S 2h 0m'))
 test('session marker falls back to S when icons off, even in emoji mode', () => assert.equal(headOf(emojiNoIcons), 'S 2h 0m'))
-test('single-width ⧗ (simple mode) keeps its space', () => {
-  assert.equal(headOf(makeTheme({ symbols: 'simple', colors: false, icons: true })), '⧗ 2h 0m')
+test('double-width ⏳ (simple mode) takes no extra space', () => {
+  assert.equal(headOf(makeTheme({ symbols: 'simple', colors: false, icons: true })), '⏳2h 0m')
+})
+test('single-width ⧗ (nerd-font mode) keeps its space', () => {
+  assert.equal(headOf(makeTheme({ symbols: 'nerd-font', colors: false, icons: true })), '⧗ 2h 0m')
 })
 test('weekly marker is always wk, even with icons on', () => {
   const wk = BY_ID.weekly.format({ now: NOW, rate_limits: { seven_day: { used_percentage: 5, resets_at: NOW / 1000 + 10_000 } } }, emoji, { showTime: true, showPercent: false })

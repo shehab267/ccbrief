@@ -64,12 +64,11 @@ test('separators are dimmed when colors are on, plain when off', () => {
   assert.equal(makeTheme({ colors: false }).sep, ' │ ')
 })
 
-// The per-mode timer split IS the cross-terminal fallback: emoji mode gets the
-// reference line's ⏳, while the DEFAULT (simple) keeps the monochrome ⧗ that
-// every font ships single-width. Nobody lands on tofu without opting in.
-test('emoji mode gets ⏳; the default mode falls back to the universal ⧗', () => {
+// The default timer is ⏳, the one people read as a clock (⧗ read as a bowtie in
+// most fonts). nerd-font keeps ⧗, which Nerd Fonts draw as a proper hourglass.
+test('emoji and the default mode get ⏳; nerd-font keeps ⧗', () => {
   assert.equal(makeTheme({ symbols: 'emoji', colors: false, icons: true }).symbol('reset'), '⏳')
-  assert.equal(makeTheme({ colors: false, icons: true }).symbol('reset'), '⧗')
+  assert.equal(makeTheme({ colors: false, icons: true }).symbol('reset'), '⏳')
   assert.equal(makeTheme({ symbols: 'nerd-font', colors: false, icons: true }).symbol('reset'), '⧗')
 })
 
@@ -107,14 +106,14 @@ test('ascii mode is pure ASCII', () => {
   assert.ok(/^[\x00-\x7f]*$/.test(t.symbol('branch') + t.bar(50) + t.sep))
 })
 
-// `simple` is the default: no pictographs (identical everywhere), but keeps the
-// universal ⧗ timer + box-drawing gauge/separator, so it still has structure.
-test('simple mode: no pictographs, keeps ⧗ + box-drawing', () => {
+// `simple` is the default: no pictographs except the ⏳ timer, plus the
+// box-drawing gauge/separator, so it still has structure.
+test('simple mode: only the ⏳ timer, plus box-drawing', () => {
   const t = makeTheme({ symbols: 'simple', colors: false, icons: true })
   for (const n of ['branch', 'tokens', 'effort', 'model', 'duration', 'cost', 'pr', 'worktree']) {
     assert.equal(t.symbol(n), '', `${n} should have no symbol in the simple set`)
   }
-  assert.equal(t.symbol('reset'), '⧗')  // the one universal symbol survives
+  assert.equal(t.symbol('reset'), '⏳')  // the one symbol it keeps
   assert.equal(t.bar(42, 9), '━━━━─────')
   assert.match(t.sep, /^ │ $/)
 })
@@ -136,7 +135,7 @@ test('nerd-font set has non-empty PUA symbols', () => {
 // doesn't fill — so a space on top double-spaces the icon from its value.
 test('icon: double-width emoji brings its own gap; narrower glyphs take a space', () => {
   assert.equal(makeTheme({ symbols: 'emoji', colors: false }).icon('model'), '🧠')
-  assert.equal(makeTheme({ symbols: 'simple', colors: false }).icon('reset'), '⧗ ')
+  assert.equal(makeTheme({ symbols: 'simple', colors: false }).icon('reset'), '⏳')
   assert.equal(makeTheme({ symbols: 'nerd-font', colors: false }).icon('reset'), '⧗ ')
 })
 
@@ -146,5 +145,6 @@ test('icon: absent glyph yields nothing at all — never a leading space', () =>
 })
 
 test('icon: tone colours the glyph only, and sits inside the gap', () => {
-  assert.equal(makeTheme({ symbols: 'simple', colors: true }).icon('reset', 'green'), '\x1b[32m⧗\x1b[0m ')
+  assert.equal(makeTheme({ symbols: 'simple', colors: true }).icon('reset', 'green'), '\x1b[32m⏳\x1b[0m')
+  assert.equal(makeTheme({ symbols: 'nerd-font', colors: true }).icon('reset', 'green'), '\x1b[32m⧗\x1b[0m ')
 })

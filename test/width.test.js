@@ -15,6 +15,8 @@ const cases = [
   ['emoji counts as 2', '🌿', 2],
   ['ZWJ family is width 2', '👨‍👩‍👧', 2],
   ['VS16 emoji presentation is 2', '⏱️', 2],
+  ['default reset timer ⏳ is 2', '⏳', 2],
+  ['nerd-font reset timer ⧗ is 1', '⧗', 1],
   ['OSC 8 hyperlink counts only visible text', OSC8('https://x.dev/pr/7', '#7 approved'), 11],
   ['mixed SGR + text', '\x1b[1m42%\x1b[0m ━━━━─────', 13],
 ]
