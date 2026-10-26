@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Docs
+- **A docs website:** [shehab267.github.io/ccbrief](https://shehab267.github.io/ccbrief/). One page
+  covering install, presets, the picker, every segment and the symbol sets, published from
+  `site/` to GitHub Pages.
+- The README's `nerd-font` example line shows its icons again; it had lost them.
+
 ## [0.4.0] — 2026-10-26
 
 The default status line looks the way people expect: a real hourglass, the full model name,
