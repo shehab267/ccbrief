@@ -24,7 +24,7 @@ See <a href="#colors-and-symbols">Colors and symbols</a>.</sub>
 
 ---
 
-[Install](#install) · [Update](#update) · [Uninstall](#uninstall) · [Presets](#presets) · [Configure](#configure) · [Segments](#segments) · [Colors and symbols](#colors-and-symbols) · [FAQ](#faq)
+**[Docs website](https://shehab267.github.io/ccbrief/)** · [npm](https://www.npmjs.com/package/ccbrief) · [Install](#install) · [Update](#update) · [Uninstall](#uninstall) · [Presets](#presets) · [Configure](#configure) · [Segments](#segments) · [Colors and symbols](#colors-and-symbols) · [FAQ](#faq)
 
 ---
 
@@ -227,7 +227,7 @@ plain text plus the ⏳ timer, with no special font needed:
 ```
 simple    ccbrief/main │ 42% ━━━━───── │ 128k │ ⏳2h 0m · 40% │ high │ Opus 5.5
 emoji     🌿ccbrief/main │ 42% ━━━━───── │ 🔸128k │ ⏳2h 0m · 40% │ ⚡high │ 🧠Opus 5.5
-nerd-font  ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │  high │  Opus 5.5
+nerd-font   ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │  high │  Opus 5.5
 ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m · 40% | high | Opus 5.5
 ```
 
