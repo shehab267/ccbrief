@@ -27,21 +27,19 @@ const SGR = {
   cyanBold: '1;36',
 }
 
-// Four symbol sets. `simple` is the DEFAULT and the only one identical for every
-// user: it has NO pictographs (no emoji or Nerd Font icon renders the same across
-// fonts) — just text plus the one monochrome symbol every font ships, the ⧗
-// reset timer. `emoji` looks richest but each OS draws its own artwork and width.
-// `nerd-font` renders blank unless a patched Nerd Font is installed. `ascii` is
-// the pure-ASCII floor (no box-drawing at all).
+// Four symbol sets. `simple` is the DEFAULT: text only, plus one symbol — the ⏳
+// reset timer — so it needs no special font. `emoji` adds an icon to most fields,
+// and each OS draws its own artwork. `nerd-font` renders blank unless a patched
+// Nerd Font is installed. `ascii` is the pure-ASCII floor (no box-drawing at all).
 //
-// The countdown carries a timer in every set, but a *different* one per set,
-// and that split is the cross-terminal fallback: `emoji` gets the ⏳ of the
-// reference line, while `simple` — the default — keeps ⧗, a monochrome symbol
-// every font ships and every terminal draws single-width. ⏳ is an emoji, so its
-// artwork and column width are the terminal's choice. The rich symbol is opt-in;
-// nobody lands on tofu by default.
+// The default timer used to be ⧗: monochrome, single-width, the same in every
+// font. But in most fonts it reads as a bowtie, not a clock, so the one symbol
+// the default shows was the one that looked broken. ⏳ is what people recognise.
+// It is an emoji, so the terminal picks its artwork, and it is double-width —
+// which theme.icon() measures, so its gap and the layout's widths stay right.
+// `nerd-font` keeps ⧗, because Nerd Fonts draw it as a proper hourglass.
 const SYMBOLS = {
-  simple:      { branch: '', tokens: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⧗' },
+  simple:      { branch: '', tokens: '', cost: '', effort: '', model: '', thinking: '', pr: '', worktree: '', reset: '⏳' },
   emoji:       { branch: '🌿', tokens: '🔸', cost: '💰', effort: '⚡', model: '🧠', thinking: '💭', pr: '🔎', worktree: '🌲', reset: '⏳' },
   // Nerd Font Private-Use code points (Powerline + Font Awesome ranges) — render
   // ONLY with a Nerd Font installed, else blank; the picker labels this mode and its

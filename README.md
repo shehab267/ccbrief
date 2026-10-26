@@ -13,7 +13,7 @@ usage with a bar, tokens, session cost, 5-hour and weekly rate-limit resets, rea
 active model — the same line rendered on a dark and a light terminal theme.](https://raw.githubusercontent.com/shehab267/ccbrief/main/assets/ccbrief-claude-code-statusline.png)
 
 ```
-ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
+ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus 5.5
 ```
 
 <sub>One line, shown above on a dark and a light terminal — the same colors, resolved by each theme.
@@ -37,6 +37,14 @@ npx ccbrief init
 That copies a self-contained renderer into `~/.claude/ccbrief/`, backs up your `settings.json`, and
 merges in the `statusLine` block — leaving everything else in your settings untouched. It finishes by
 showing you a preview and what to do next.
+
+![A terminal running `npx ccbrief init`, which installs ccbrief and prints a preview of the status
+line, then `npx ccbrief config`: the picker switches to the detailed preset, back to standard, turns on
+the session cost segment, moves it next to the context bar, cycles the symbol sets, turns icons off
+and on, and saves. The live preview updates on
+every keypress, and a badge on the right names each key as it is pressed.](https://raw.githubusercontent.com/shehab267/ccbrief/main/assets/ccbrief-demo.gif)
+
+<sub>Install, then choose what it shows. The badge on the right shows each key as it is pressed.</sub>
 
 **No restart needed.** Claude Code reloads its settings on its own, so your status line appears the next
 time you interact with it.
@@ -79,14 +87,14 @@ before removing the `~/.claude/ccbrief/` directory.
 is, when your limit resets and how much of it you've spent, and which model you're on.
 
 ```
-ccbrief/main │ 42% ━━━━───── │ ⧗ 2h 0m · 40% │ Opus
+ccbrief/main │ 42% ━━━━───── │ ⏳2h 0m · 40% │ Opus 5.5
 ```
 
 **Detailed** — everything ccbrief knows, one `p` away in the picker. Turn *off* what you don't want
 rather than hunt for what you're missing.
 
 ```
-ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⧗ 2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
+ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus 5.5
 ```
 
 Too wide for your terminal? ccbrief packs whole segments across up to three rows — it never splits a
@@ -94,7 +102,7 @@ segment or lets the terminal wrap mid-field:
 
 ```
 ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23
-⧗ 2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus
+⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus 5.5
 ```
 
 **A segment with no data is hidden, never faked.** Context % and rate limits are null early in a
@@ -184,11 +192,11 @@ Every segment hides itself when its data isn't there, so you only ever see live 
 | `context` | Context used, with a bar (`42% ━━━━─────`) | Null early in a session / after `/compact` |
 | `tokens` | Tokens in context (`128k`) | Before the first response / after `/compact` |
 | `cost` | Session cost (`$1.23`) | Absent |
-| `fiveHour` | Session limit — reset countdown + usage (`⧗ 2h 0m · 40%`) | Not on Pro/Max |
+| `fiveHour` | Session limit — reset countdown + usage (`⏳2h 0m · 40%`) | Not on Pro/Max |
 | `weekly` | Weekly limit — reset countdown + usage (`wk 3d 4h · 62%`) | Not on Pro/Max |
 | `lines` | Lines Claude added/removed this session (`+120/-34`) | Absent |
 | `effort` | Reasoning effort (`high`) | Absent |
-| `model` | Active model (`Opus`) | Absent |
+| `model` | Active model (`Opus 5.5`) | Absent |
 | `pr` | PR number + review state, clickable (OSC 8) | No associated PR |
 | `worktree` | Active git worktree name | Not in a worktree |
 | `thinking` | Thinking indicator | Thinking not enabled |
@@ -213,18 +221,19 @@ Colors come from the **standard ANSI palette**, never hard-coded RGB — so your
 them against its own background and the line stays readable on **dark and light** themes alike.
 Nothing is dimmed except separators; information is never greyed out.
 
-Four symbol sets — they pick the icons, the bar characters and the separator. `simple` is the default
-because it's the only one that looks the same for everyone:
+Four symbol sets — they pick the icons, the bar characters and the separator. `simple` is the default:
+plain text plus the ⏳ timer, with no special font needed:
 
 ```
-simple    ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │ high │ Opus
-emoji     🌿ccbrief/main │ 42% ━━━━───── │ 🔸128k │ ⏳2h 0m · 40% │ ⚡high │ 🧠Opus
-nerd-font  ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │  high │  Opus
-ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m · 40% | high | Opus
+simple    ccbrief/main │ 42% ━━━━───── │ 128k │ ⏳2h 0m · 40% │ high │ Opus 5.5
+emoji     🌿ccbrief/main │ 42% ━━━━───── │ 🔸128k │ ⏳2h 0m · 40% │ ⚡high │ 🧠Opus 5.5
+nerd-font  ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │  high │  Opus 5.5
+ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m · 40% | high | Opus 5.5
 ```
 
 `nerd-font` **renders blank boxes unless you have a Nerd Font installed** — the picker labels it and
-the live preview shows you before you commit. `ascii` drops to plain `|` and `#`.
+the live preview shows you before you commit. `ascii` drops to plain `|` and `#`. If the ⏳ timer shows
+as a box, your terminal has no emoji font: pick `ascii`.
 
 Set `colors: false` or `icons: false` (or press `c` / `i` in the picker) to turn either off.
 

@@ -42,7 +42,7 @@ test('panel labels the symbol set with its portability note', () => {
   const nerd = initialState(loadConfig({ preset: 'standard', colors: false, symbols: 'nerd-font' }))
   assert.ok(renderPanel(nerd, { columns: 120 }).includes('needs a Nerd Font'))
   const simple = initialState(loadConfig({ preset: 'standard', colors: false, symbols: 'simple' }))
-  assert.ok(renderPanel(simple, { columns: 120 }).includes('same on every terminal'))
+  assert.ok(renderPanel(simple, { columns: 120 }).includes('no special font'))
 })
 
 // The keymap footer is static — no toggle keys are crammed into it; they get a

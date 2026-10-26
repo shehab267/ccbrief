@@ -20,7 +20,7 @@ import { PREVIEW_INPUT } from '../preview.js'
 // trap that silently wiped a user's icons — so it says so. The live preview is
 // the proof; this label is the warning that makes a blank preview make sense.
 const SYMBOL_NOTES = {
-  simple: 'same on every terminal',
+  simple: 'no special font needed',
   emoji: 'most terminals; look varies',
   'nerd-font': 'needs a Nerd Font installed',
   ascii: 'plain text, works everywhere',
