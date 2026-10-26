@@ -22,7 +22,7 @@
     --muted: #9ba3ab;
     --line: #2c3033;
     --code-bg: #1e2123;
-    --term-bg: #0f1112;
+    --term-bg: #0a0b0c;
     --term-fg: #e4e6e7;
     --accent: #6cc18e;
   }
@@ -159,6 +159,10 @@ pre.hero {
   background: var(--term-bg);
   color: var(--term-fg);
   border-color: var(--term-bg);
+}
+/* In dark mode the page is already near-black, so give the terminal box an edge. */
+@media (prefers-color-scheme: dark) {
+  pre.hero { border-color: var(--line); }
 }
 
 pre.cmd::before { content: '$ '; color: var(--muted); user-select: none; }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ccbrief — a minimal status line for Claude Code</title>
-<meta name="description" content="ccbrief is a minimal, configurable status line for Claude Code: context window, tokens, session cost and rate-limit usage at a glance. One command to install, zero runtime dependencies, no telemetry.">
+<meta name="description" content="ccbrief is a minimal, configurable status line for Claude Code: context window, tokens, session cost and rate-limit usage at a glance. One command to install, no network calls, no telemetry.">
 <link rel="canonical" href="https://shehab267.github.io/ccbrief/">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
@@ -48,14 +48,15 @@
   <p class="lede">A minimal, configurable status line for Claude Code: your context window, tokens,
   session cost and rate-limit usage, at a glance in your terminal.</p>
 
-  <pre class="hero"><code>ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus 5.5</code></pre>
+  <pre class="hero"><code>ccbrief/main │ 42% ━━━━───── │ ⏳2h 0m · 40% │ Opus 5.5</code></pre>
 
   <pre class="cmd"><code>npx ccbrief init</code></pre>
 
   <figure>
-    <img src="assets/ccbrief-demo.gif" width="1240" height="720"
-      alt="A terminal running npx ccbrief init, which installs ccbrief and prints a preview of the status line, then npx ccbrief config: the picker switches presets, turns on the session cost segment, moves it next to the context bar, cycles the symbol sets, toggles icons and saves. The live preview updates on every keypress.">
-    <figcaption>Install, then choose what it shows. The badge on the right names each key as it is pressed.</figcaption>
+    <a href="assets/ccbrief-demo.gif"><img src="assets/ccbrief-demo.gif" width="1240" height="720"
+      alt="A terminal running npx ccbrief init, which installs ccbrief and prints a preview of the status line, then npx ccbrief config: the picker switches presets, turns on the session cost segment, moves it next to the context bar, cycles the symbol sets, toggles icons and saves. The live preview updates on every keypress."></a>
+    <figcaption>Install, then choose what it shows. The badge on the right names each key as it is
+    pressed. <a href="assets/ccbrief-demo.gif">Open full size</a>.</figcaption>
   </figure>
 
   <p class="note"><strong>Not affiliated with, or endorsed by, Anthropic.</strong> ccbrief is an
@@ -143,7 +144,7 @@
       <thead><tr><th scope="col">Key</th><th scope="col">Values</th><th scope="col">Default</th></tr></thead>
       <tbody>
         <tr><td><code>preset</code></td><td><code>standard</code> · <code>detailed</code> · <code>custom</code></td><td><code>standard</code></td></tr>
-        <tr><td><code>layout</code></td><td><code>auto</code> · <code>single-line</code> · <code>multi-line</code></td><td><code>auto</code></td></tr>
+        <tr><td><code>layout</code></td><td><code>auto</code> · <code>single-line</code> (drops the segments that don't fit) · <code>multi-line</code></td><td><code>auto</code></td></tr>
         <tr><td><code>maxRows</code></td><td><code>1</code>–<code>3</code></td><td><code>3</code></td></tr>
         <tr><td><code>symbols</code></td><td><code>simple</code> · <code>emoji</code> · <code>nerd-font</code> · <code>ascii</code></td><td><code>simple</code></td></tr>
         <tr><td><code>colors</code></td><td><code>true</code> · <code>false</code></td><td><code>true</code></td></tr>
@@ -245,8 +246,8 @@ ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m · 40% | high | Opus 5.5
 
     <dt>How is this different from a shell script with <code>jq</code>?</dt>
     <dd>A typical bash status line spawns <code>jq</code> once per field, around twenty processes on
-    every render. ccbrief is a single Node process that parses the session JSON once, with zero runtime
-    dependencies.</dd>
+    every render. ccbrief is a single Node process that parses the session JSON once, and the renderer it installs
+    is one self-contained file with no dependencies.</dd>
 
     <dt>Can I choose which segments to show?</dt>
     <dd>Run <code>npx ccbrief config</code>. All fifteen segments are listed with a live preview. See
