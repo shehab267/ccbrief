@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.3] — 2026-10-26
+
+### Changed
+- **Widths are measured by `string-width` 8.3**, which does the same work faster. It is
+  bundled into the renderer that runs on every status line update, so the speedup is
+  yours. Nothing you see changes: both presets render byte-for-byte the same as 0.3.2 at
+  every width tried, and every width primitive — Latin, Hangul, Thai, emoji, ZWJ
+  families, flags, VS16, CJK — returns the same value.
+- The bundler is esbuild 0.28.2. It builds the renderer that gets installed, so it is
+  named here even though it never appears in a dependency tree of yours.
+- The README opens with a nav line, so Install, Update, Configure and the FAQ are one
+  click away.
+
 ## [0.3.2] — 2026-07-13
 
 ### Changed
@@ -218,7 +231,8 @@ version that actually does something.
   control characters before rendering, and PR links are wrapped as terminal
   hyperlinks only for `http(s)` URLs.
 
-[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/shehab267/ccbrief/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/shehab267/ccbrief/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/shehab267/ccbrief/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/shehab267/ccbrief/compare/v0.2.0...v0.3.0
