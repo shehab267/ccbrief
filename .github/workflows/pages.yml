@@ -1,0 +1,49 @@
+name: Docs site
+
+# Publishes site/ to GitHub Pages (https://shehab267.github.io/ccbrief/).
+#
+# The site is one hand-written page, so there is nothing to build: this job only
+# copies in the images it shares with the README, then deploys. Keeping the images in
+# assets/ (and copying them here) means there is one copy of each, so the README and
+# the site can never show different pictures.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'assets/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# One deploy at a time; a newer push replaces a queued one, but never cancels a
+# deploy that is already running.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write    # publish to Pages
+  id-token: write # prove the deploy came from this workflow
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: assemble the site
+        run: |
+          mkdir -p _site/assets
+          cp site/* _site/
+          cp assets/ccbrief-demo.gif assets/ccbrief-claude-code-statusline.png assets/social-card.png _site/assets/
+
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
