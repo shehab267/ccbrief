@@ -24,6 +24,10 @@ See <a href="#colors-and-symbols">Colors and symbols</a>.</sub>
 
 ---
 
+[Install](#install) · [Update](#update) · [Uninstall](#uninstall) · [Presets](#presets) · [Configure](#configure) · [Segments](#segments) · [Colors and symbols](#colors-and-symbols) · [FAQ](#faq)
+
+---
+
 ## Install
 
 ```sh
