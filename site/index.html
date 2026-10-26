@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ccbrief — a minimal status line for Claude Code</title>
+<meta name="description" content="ccbrief is a minimal, configurable status line for Claude Code: context window, tokens, session cost and rate-limit usage at a glance. One command to install, zero runtime dependencies, no telemetry.">
+<link rel="canonical" href="https://shehab267.github.io/ccbrief/">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ccbrief — a minimal status line for Claude Code">
+<meta property="og:description" content="Context window, tokens, session cost and rate-limit usage, at a glance in your terminal.">
+<meta property="og:url" content="https://shehab267.github.io/ccbrief/">
+<meta property="og:image" content="https://shehab267.github.io/ccbrief/assets/social-card.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ccbrief — a minimal status line for Claude Code">
+<meta name="twitter:description" content="Context window, tokens, session cost and rate-limit usage, at a glance in your terminal.">
+<meta name="twitter:image" content="https://shehab267.github.io/ccbrief/assets/social-card.png">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="brand" href="#intro">ccbrief</a>
+    <nav aria-label="Sections">
+      <ul>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#presets">Presets</a></li>
+        <li><a href="#configure">Configure</a></li>
+        <li><a href="#segments">Segments</a></li>
+        <li><a href="#colors-and-symbols">Symbols</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="https://github.com/shehab267/ccbrief">GitHub</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+<section id="intro" aria-labelledby="intro-title">
+  <h1 id="intro-title">ccbrief</h1>
+  <p class="lede">A minimal, configurable status line for Claude Code: your context window, tokens,
+  session cost and rate-limit usage, at a glance in your terminal.</p>
+
+  <pre class="hero"><code>ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus 5.5</code></pre>
+
+  <pre class="cmd"><code>npx ccbrief init</code></pre>
+
+  <figure>
+    <img src="assets/ccbrief-demo.gif" width="1240" height="720"
+      alt="A terminal running npx ccbrief init, which installs ccbrief and prints a preview of the status line, then npx ccbrief config: the picker switches presets, turns on the session cost segment, moves it next to the context bar, cycles the symbol sets, toggles icons and saves. The live preview updates on every keypress.">
+    <figcaption>Install, then choose what it shows. The badge on the right names each key as it is pressed.</figcaption>
+  </figure>
+
+  <p class="note"><strong>Not affiliated with, or endorsed by, Anthropic.</strong> ccbrief is an
+  independent, open-source project that reads the data Claude Code already exposes. No network calls,
+  no telemetry.</p>
+</section>
+
+<section id="install" aria-labelledby="install-title">
+  <h2 id="install-title">Install</h2>
+  <pre><code>npx ccbrief init</code></pre>
+  <p>This copies a self-contained renderer into <code>~/.claude/ccbrief/</code>, backs up your
+  <code>settings.json</code> and merges in the <code>statusLine</code> block. The rest of your settings
+  stay as they are. It finishes with a preview and the next steps.</p>
+  <p><strong>No restart needed.</strong> Claude Code reloads its settings on its own, so the status line
+  appears the next time you interact with it.</p>
+  <p>Requires <strong>Node ≥ 22</strong>. Works on <strong>Windows, macOS, Linux and WSL</strong>.</p>
+
+  <h3 id="update">Update</h3>
+  <pre><code>npx ccbrief@latest init</code></pre>
+  <p>Re-running <code>init</code> is how you upgrade. It <em>copies</em> the renderer, so a newer
+  package changes nothing until you run it again. It is safe to re-run: your config and settings are
+  kept.</p>
+  <p>Installed globally instead? Run <code>npm install -g ccbrief@latest</code>, then
+  <code>ccbrief init</code>.</p>
+
+  <h3 id="uninstall">Uninstall</h3>
+  <pre><code>npx ccbrief uninstall</code></pre>
+  <p>Restores your backed-up <code>settings.json</code>, or strips just the <code>statusLine</code> block
+  ccbrief added. It asks before removing <code>~/.claude/ccbrief/</code>.</p>
+</section>
+
+<section id="presets" aria-labelledby="presets-title">
+  <h2 id="presets-title">Presets</h2>
+  <p><strong><code>standard</code></strong> is the default: where you are, how full the context is, when
+  your limit resets and how much of it you've spent, and which model you're on.</p>
+  <pre><code>ccbrief/main │ 42% ━━━━───── │ ⏳2h 0m · 40% │ Opus 5.5</code></pre>
+  <p><strong><code>detailed</code></strong> shows everything ccbrief knows, one <kbd>p</kbd> away in the
+  picker. Turn off what you don't want.</p>
+  <pre><code>ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23 │ ⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus 5.5</code></pre>
+  <p>Too wide for your terminal? ccbrief packs whole segments across up to three rows. It never splits
+  a segment or lets the terminal wrap mid-field:</p>
+  <pre><code>ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23
+⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus 5.5</code></pre>
+  <p><strong>A segment with no data is hidden, never faked.</strong> Context % and rate limits are null
+  early in a session and right after <code>/compact</code>. You'll see fewer segments, never a made-up
+  <code>0%</code>.</p>
+</section>
+
+<section id="configure" aria-labelledby="configure-title">
+  <h2 id="configure-title">Configure</h2>
+  <pre><code>npx ccbrief config</code></pre>
+  <p>An interactive picker with a live preview. Every segment is listed, with a plain-English name.
+  Saving also re-syncs <code>settings.json</code>, so changes show up on Claude Code's next render with
+  no reinstall.</p>
+
+  <div class="table-scroll">
+    <table>
+      <caption>Picker keys</caption>
+      <thead><tr><th scope="col">Key</th><th scope="col">Does</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>space</kbd></td><td>Show / hide the focused segment</td></tr>
+        <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Move between segments</td></tr>
+        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Reorder the focused segment</td></tr>
+        <tr><td><kbd>p</kbd></td><td>Cycle preset</td></tr>
+        <tr><td><kbd>y</kbd></td><td>Cycle symbols</td></tr>
+        <tr><td><kbd>c</kbd></td><td>Toggle colors</td></tr>
+        <tr><td><kbd>i</kbd></td><td>Toggle icons</td></tr>
+        <tr><td><kbd>l</kbd></td><td>Cycle layout</td></tr>
+        <tr><td><kbd>d</kbd></td><td>On <code>repo</code>: show / hide the working-tree diff (<code>+3/-1</code>)</td></tr>
+        <tr><td><kbd>t</kbd> <kbd>%</kbd></td><td>On <code>fiveHour</code> / <code>weekly</code>: show / hide the countdown / the usage percent</td></tr>
+        <tr><td><kbd>↵</kbd></td><td>Save and exit</td></tr>
+        <tr><td><kbd>esc</kbd></td><td>Quit without saving</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="config-file">The config file</h3>
+  <p>It lives at <code>~/.claude/ccbrief/config.json</code> (set <code>CLAUDE_CONFIG_DIR</code> to move
+  the base directory). It's optional: a missing or malformed file falls back to defaults and never
+  breaks the status line. The picker writes it for you.</p>
+
+  <div class="table-scroll">
+    <table>
+      <caption>Config keys</caption>
+      <thead><tr><th scope="col">Key</th><th scope="col">Values</th><th scope="col">Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>preset</code></td><td><code>standard</code> · <code>detailed</code> · <code>custom</code></td><td><code>standard</code></td></tr>
+        <tr><td><code>layout</code></td><td><code>auto</code> · <code>single-line</code> · <code>multi-line</code></td><td><code>auto</code></td></tr>
+        <tr><td><code>maxRows</code></td><td><code>1</code>–<code>3</code></td><td><code>3</code></td></tr>
+        <tr><td><code>symbols</code></td><td><code>simple</code> · <code>emoji</code> · <code>nerd-font</code> · <code>ascii</code></td><td><code>simple</code></td></tr>
+        <tr><td><code>colors</code></td><td><code>true</code> · <code>false</code></td><td><code>true</code></td></tr>
+        <tr><td><code>icons</code></td><td><code>true</code> · <code>false</code></td><td><code>true</code></td></tr>
+        <tr><td><code>segments</code></td><td>Ordered list, only read when <code>preset</code> is <code>custom</code></td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Written by hand, a <code>custom</code> config looks like this:</p>
+  <pre><code>{
+  "preset": "custom",
+  "segments": [
+    { "id": "repo", "enabled": true, "showDiff": true },
+    { "id": "context", "enabled": true },
+    { "id": "fiveHour", "enabled": true, "showTime": true, "showPercent": true },
+    { "id": "model", "enabled": true }
+  ]
+}</code></pre>
+  <p>A named preset derives its own list, so it carries no <code>segments</code> key. Unknown ids are
+  ignored rather than fatal.</p>
+</section>
+
+<section id="segments" aria-labelledby="segments-title">
+  <h2 id="segments-title">Segments</h2>
+  <p>Every segment hides itself when its data isn't there, so you only ever see live values.</p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th scope="col">Segment</th><th scope="col">Shows</th><th scope="col">Hidden when</th></tr></thead>
+      <tbody>
+        <tr><td><code>directory</code></td><td>Current directory (<code>ccbrief</code>)</td><td>No workspace directory</td></tr>
+        <tr><td><code>repo</code></td><td>Repo/branch (<code>ccbrief/main</code>); <code>showDiff</code> adds <code>+3/-1</code></td><td>Not in a git repo</td></tr>
+        <tr><td><code>context</code></td><td>Context used, with a bar (<code>42% ━━━━─────</code>)</td><td>Null early in a session / after <code>/compact</code></td></tr>
+        <tr><td><code>tokens</code></td><td>Tokens in context (<code>128k</code>)</td><td>Before the first response / after <code>/compact</code></td></tr>
+        <tr><td><code>cost</code></td><td>Session cost (<code>$1.23</code>)</td><td>Absent</td></tr>
+        <tr><td><code>fiveHour</code></td><td>Session limit: reset countdown + usage (<code>⏳2h 0m · 40%</code>)</td><td>Not on Pro/Max</td></tr>
+        <tr><td><code>weekly</code></td><td>Weekly limit: reset countdown + usage (<code>wk 3d 4h · 62%</code>)</td><td>Not on Pro/Max</td></tr>
+        <tr><td><code>lines</code></td><td>Lines Claude added/removed this session (<code>+120/-34</code>)</td><td>Absent</td></tr>
+        <tr><td><code>effort</code></td><td>Reasoning effort (<code>high</code>)</td><td>Absent</td></tr>
+        <tr><td><code>model</code></td><td>Active model (<code>Opus 5.5</code>)</td><td>Absent</td></tr>
+        <tr><td><code>pr</code></td><td>PR number + review state, clickable (OSC 8)</td><td>No associated PR</td></tr>
+        <tr><td><code>worktree</code></td><td>Active git worktree name</td><td>Not in a worktree</td></tr>
+        <tr><td><code>thinking</code></td><td>Thinking indicator</td><td>Thinking not enabled</td></tr>
+        <tr><td><code>outputStyle</code></td><td>Output style name (<code>concise</code>)</td><td>Absent</td></tr>
+        <tr><td><code>agent</code></td><td>Active subagent name</td><td>No active subagent</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">The last five aren't in either preset, but the picker lists them like everything else.
+  <kbd>space</kbd> switches one on. The rate-limit countdown runs toward a <em>reset</em>, so it never
+  turns red; the usage % beside it is the part that warns you.</p>
+</section>
+
+<section id="colors-and-symbols" aria-labelledby="colors-title">
+  <h2 id="colors-title">Colors and symbols</h2>
+  <p>Each field has its own color, so you can find it without reading it: context is magenta, tokens
+  yellow, the reset timer green, the model cyan. Only the context bar and the rate-limit percent change
+  color to signal state (green → yellow → red as they fill).</p>
+  <p>Colors come from the standard ANSI palette, never hard-coded RGB, so your terminal theme resolves
+  them and the line stays readable on dark and light themes alike.</p>
+  <figure>
+    <img src="assets/ccbrief-claude-code-statusline.png" width="1120" height="289" loading="lazy"
+      alt="The ccbrief status line showing directory, git branch, lines changed, context-window usage with a bar, tokens, session cost, 5-hour and weekly rate-limit resets, reasoning effort and the active model, rendered on a dark and a light terminal theme.">
+    <figcaption>The same line on a dark and a light terminal.</figcaption>
+  </figure>
+  <p>Four symbol sets pick the icons, the bar characters and the separator. <code>simple</code> is the
+  default: plain text plus the ⏳ timer, no special font needed.</p>
+  <pre><code>simple    ccbrief/main │ 42% ━━━━───── │ 128k │ ⏳2h 0m · 40% │ high │ Opus 5.5
+emoji     🌿ccbrief/main │ 42% ━━━━───── │ 🔸128k │ ⏳2h 0m · 40% │ ⚡high │ 🧠Opus 5.5
+nerd-font   ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │  high │  Opus 5.5
+ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m · 40% | high | Opus 5.5</code></pre>
+  <p><code>nerd-font</code> renders blank boxes unless you have a Nerd Font installed; the picker's live
+  preview shows you before you commit. If the ⏳ timer shows as a box, your terminal has no emoji font:
+  pick <code>ascii</code>. Set <code>colors: false</code> or <code>icons: false</code> (or press
+  <kbd>c</kbd> / <kbd>i</kbd> in the picker) to turn either off.</p>
+</section>
+
+<section id="faq" aria-labelledby="faq-title">
+  <h2 id="faq-title">FAQ</h2>
+  <dl>
+    <dt>How do I add a status line to Claude Code?</dt>
+    <dd>Run <code>npx ccbrief init</code>. It writes the renderer to <code>~/.claude/ccbrief/</code> and
+    merges a <code>statusLine</code> block into your <code>settings.json</code>, backing the file up
+    first. No restart needed.</dd>
+
+    <dt>Why did my context percentage disappear?</dt>
+    <dd>Claude Code hasn't reported one yet. <code>used_percentage</code> is null early in a session and
+    right after <code>/compact</code>, so ccbrief hides the segment rather than inventing a
+    <code>0%</code>. It comes back on the next response.</dd>
+
+    <dt>Can I see my 5-hour and weekly rate limits?</dt>
+    <dd>Yes: the <code>fiveHour</code> and <code>weekly</code> segments show the reset countdown and the
+    percent used. Claude Code only reports rate limits on Pro and Max plans, so on other plans they stay
+    hidden.</dd>
+
+    <dt>Does it work on Windows?</dt>
+    <dd>Yes. Windows, WSL, macOS and Linux, on Node 22 and 24. CI runs the full suite on all three
+    operating systems.</dd>
+
+    <dt>How is this different from a shell script with <code>jq</code>?</dt>
+    <dd>A typical bash status line spawns <code>jq</code> once per field, around twenty processes on
+    every render. ccbrief is a single Node process that parses the session JSON once, with zero runtime
+    dependencies.</dd>
+
+    <dt>Can I choose which segments to show?</dt>
+    <dd>Run <code>npx ccbrief config</code>. All fifteen segments are listed with a live preview. See
+    <a href="#segments">Segments</a>.</dd>
+  </dl>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <ul class="links">
+      <li><a href="https://github.com/shehab267/ccbrief">GitHub</a></li>
+      <li><a href="https://www.npmjs.com/package/ccbrief">npm</a></li>
+      <li><a href="https://github.com/shehab267/ccbrief/blob/main/CHANGELOG.md">Changelog</a></li>
+      <li><a href="https://github.com/shehab267/ccbrief/issues">Issues</a></li>
+      <li><a href="https://github.com/shehab267/ccbrief/blob/main/LICENSE">MIT license</a></li>
+    </ul>
+    <p>ccbrief is open source under the MIT license, © shehab267. Not affiliated with or endorsed by
+    Anthropic.</p>
+  </div>
+</footer>
+</body>
+</html>

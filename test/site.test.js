@@ -1,0 +1,62 @@
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import * as fx from './fixtures.js'
+import { render } from '../src/render.js'
+import { loadConfig } from '../src/config.js'
+import { SEGMENTS } from '../src/segments/index.js'
+
+// The docs site (site/) is a hand-written page with no generator, so nothing
+// keeps it in step with the code except these checks. They fail when a segment
+// is added, a command renamed or a format changed, and when a link would break
+// once Pages serves the page under /ccbrief/.
+const html = readFileSync(new URL('../site/index.html', import.meta.url), 'utf8')
+const css = readFileSync(new URL('../site/style.css', import.meta.url), 'utf8')
+
+const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+// Matched as <code>id</code>, not a bare substring: ids like `pr` or `model`
+// also turn up in ordinary prose and would pass without being documented.
+test('every segment in the catalog is documented on the site', () => {
+  for (const seg of SEGMENTS) {
+    assert.ok(html.includes(`<code>${seg.id}</code>`), `site is missing segment: ${seg.id}`)
+  }
+})
+
+test('both named presets are documented', () => {
+  for (const name of ['standard', 'detailed']) {
+    assert.ok(html.includes(`<code>${name}</code>`), `site is missing preset: ${name}`)
+  }
+})
+
+test('the install, config and uninstall commands appear', () => {
+  for (const cmd of ['npx ccbrief init', 'npx ccbrief config', 'npx ccbrief uninstall']) {
+    assert.ok(html.includes(cmd), `site is missing command: ${cmd}`)
+  }
+})
+
+// Same guarantee as the README test in fixtures.test.js: the example on the
+// page is the renderer's real output. Escaped so a segment that ever emits
+// `<` or `&` still matches the HTML source.
+test('the detailed example line is the real render of the demo fixture', () => {
+  const line = render(fx.demo, loadConfig({ preset: 'detailed', colors: false }), { columns: 200 })
+  assert.ok(html.includes(escapeHtml(line)), `site no longer contains the rendered detailed line:\n${line}`)
+})
+
+test('the Anthropic disclaimer is kept', () => {
+  assert.ok(html.includes('Not affiliated with, or endorsed by, Anthropic.'))
+})
+
+// A project site lives under /ccbrief/, so `/assets/x.png` resolves to the
+// domain root and 404s. Relative paths only (this also rejects `//host`).
+test('no root-absolute paths in the page or stylesheet', () => {
+  assert.doesNotMatch(html, /(?:src|href)="\//)
+  assert.doesNotMatch(css, /url\(\s*['"]?\//)
+})
+
+test('every in-page link has a target', () => {
+  const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]))
+  const anchors = [...html.matchAll(/href="#([^"]+)"/g)].map((m) => m[1])
+  assert.ok(anchors.length > 0)
+  for (const a of anchors) assert.ok(ids.has(a), `href="#${a}" has no matching id`)
+})
