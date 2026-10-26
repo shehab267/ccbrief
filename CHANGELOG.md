@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-10-26
+
+The default status line looks the way people expect: a real hourglass, the full model name,
+and a README that shows the whole setup in motion.
+
 ### Changed
 - **The default reset timer is ⏳.** The `simple` set used ⧗, which is the same width in every
   font but reads as a bowtie in most of them. ⏳ is the hourglass people recognise. It is
@@ -245,7 +250,8 @@ version that actually does something.
   control characters before rendering, and PR links are wrapped as terminal
   hyperlinks only for `http(s)` URLs.
 
-[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/shehab267/ccbrief/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/shehab267/ccbrief/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/shehab267/ccbrief/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/shehab267/ccbrief/compare/v0.3.0...v0.3.1
