@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- **The default reset timer is ⏳.** The `simple` set used ⧗, which is the same width in every
+  font but reads as a bowtie in most of them. ⏳ is the hourglass people recognise. It is
+  double-width, and ccbrief measures it that way, so spacing and line packing stay right.
+  `nerd-font` keeps ⧗, which Nerd Fonts draw as a proper hourglass.
+
+### Fixed
+- The preview's sample model is `Opus 5.5`, not `Opus`. Claude Code sends the model with its
+  version, and a preview without it looked like the line drops part of the name.
+
+### Docs
+- The README opens Install with a short GIF: `init`, then the picker, with each key shown on
+  screen as it is pressed.
+
 ## [0.3.3] — 2026-10-26
 
 ### Changed
