@@ -41,9 +41,9 @@ SHOW_FOR = 1.3     # seconds a badge stays up after the last press
 HOLD_ON_EXIT = 0.9 # let the viewer read "save" before the picker closes
 BOX = 18           # badge width in columns
 TOP = 9            # badge row: beside the segment list
-ACCENT = '\x1b[38;5;244m'   # plain greys: the badge should not compete with the UI
-KEYCAP = '\x1b[1m'
-DIM = '\x1b[38;5;246m'
+ACCENT = '\x1b[38;5;252m'   # light grey border: easy to spot, still neutral
+KEYCAP = '\x1b[1;97m'      # bold bright white
+DIM = '\x1b[38;5;250m'
 RESET = '\x1b[0m'
 
 

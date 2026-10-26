@@ -11,7 +11,8 @@
 #   HOME="$(mktemp -d)" vhs assets/ccbrief-demo.tape
 #
 # `init` prints the config file's full path. The published GIF was recorded with
-# that throwaway HOME mounted at /home/you (bwrap), so the path reads cleanly.
+# that throwaway HOME mounted at /home/shehab-alhawary (bwrap), so the path reads
+# cleanly.
 #
 # It records THIS checkout, not the npm release: `npx ccbrief` runs bin/ccbrief.js,
 # so the GIF matches the code it ships with. Run `npm run build` first — `init`
@@ -28,7 +29,9 @@ Set FontSize 17
 Set Width 1240
 Set Height 720
 Set Padding 24
-Set Theme "GitHub Dark"
+# GitHub Dark, with GitHub's own terminal text colour (#c9d1d9) and cyan (#39c5cf):
+# the stock theme's #8b949e text and #2b7489 cyan are too dim to read in a GIF.
+Set Theme { "name": "GitHub Dark (readable)", "background": "#101216", "foreground": "#c9d1d9", "cursor": "#c9d1d9", "selection": "#3b5070", "black": "#000000", "red": "#f78166", "green": "#56d364", "yellow": "#e3b341", "blue": "#6ca4f8", "magenta": "#db61a2", "cyan": "#39c5cf", "white": "#ffffff", "brightBlack": "#4d4d4d", "brightRed": "#f78166", "brightGreen": "#56d364", "brightYellow": "#e3b341", "brightBlue": "#6ca4f8", "brightMagenta": "#db61a2", "brightCyan": "#39c5cf", "brightWhite": "#ffffff" }
 Set WindowBar Colorful
 Set BorderRadius 8
 Set Margin 16
@@ -39,7 +42,7 @@ Set CursorBlink false
 Hide
 # The stock Debian/Ubuntu bash prompt, `npx ccbrief` pointed at this checkout, and `config` run under the
 # keycast wrapper.
-Type `export PS1='\[\e[01;32m\]you@laptop\[\e[00m\]:\[\e[01;34m\]~/my-project\[\e[00m\]$ ' CCBRIEF="$PWD/bin/ccbrief.js" KEYCAST="$PWD/assets/ccbrief-demo-keycast.py"`
+Type `export PS1='\[\e[01;32m\]shehab-alhawary\[\e[00m\]:\[\e[01;34m\]~/my-project\[\e[00m\]$ ' CCBRIEF="$PWD/bin/ccbrief.js" KEYCAST="$PWD/assets/ccbrief-demo-keycast.py"`
 Enter
 Type `npx() { if [ "$1 $2" = "ccbrief config" ]; then python3 "$KEYCAST" node "$CCBRIEF" config; elif [ "$1" = ccbrief ]; then shift; node "$CCBRIEF" "$@"; else command npx "$@"; fi; }`
 Enter
