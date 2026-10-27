@@ -38,7 +38,7 @@ jobs:
       - name: assemble the site
         run: |
           mkdir -p _site/assets
-          cp site/* _site/
+          cp -R site/. _site/
           cp assets/ccbrief-demo.gif assets/ccbrief-claude-code-statusline.png assets/social-card.png _site/assets/
 
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0

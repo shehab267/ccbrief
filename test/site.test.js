@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import * as fx from './fixtures.js'
 import { render } from '../src/render.js'
 import { loadConfig } from '../src/config.js'
@@ -99,4 +99,19 @@ test('the sitemap lists exactly the canonical URL', () => {
   const sitemap = readFileSync(new URL('../site/sitemap.xml', import.meta.url), 'utf8')
   const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
   assert.deepEqual(locs, [canonical])
+})
+
+// Every local file the page or stylesheet points at must exist once deployed.
+// The Pages workflow publishes site/ as is and copies assets/ in beside it, so
+// `assets/x` resolves against the repo's assets/ and everything else against site/.
+test('every local file the site links to exists', () => {
+  const refs = [
+    ...[...html.matchAll(/(?:src|href)="([^"#:]+)"/g)].map((m) => m[1]),
+    ...[...css.matchAll(/url\(\s*['"]?([^'")]+)['"]?\s*\)/g)].map((m) => m[1]),
+  ].filter((r) => !r.startsWith('data:'))
+  assert.ok(refs.length > 0)
+  for (const ref of refs) {
+    const file = ref.startsWith('assets/') ? new URL(`../${ref}`, import.meta.url) : new URL(`../site/${ref}`, import.meta.url)
+    assert.ok(existsSync(file), `site links to a missing file: ${ref}`)
+  }
 })

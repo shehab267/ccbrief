@@ -7,6 +7,8 @@
 <meta name="description" content="ccbrief is a minimal, configurable status line (statusline) for Claude Code. Install from npm with npx ccbrief init: context, tokens, cost and rate limits at a glance.">
 <link rel="canonical" href="https://shehab267.github.io/ccbrief/">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16191d" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:title" content="ccbrief — a minimal status line for Claude Code">
 <meta property="og:description" content="Context window, tokens, session cost and rate-limit usage, at a glance in your terminal.">
@@ -41,41 +43,53 @@
   ]
 }
 </script>
-<link rel="icon" href="data:,">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/atkinson-hyperlegible-next.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="top">
-  <div class="wrap top-inner">
-    <a class="brand" href="#intro">ccbrief</a>
-    <nav aria-label="Sections">
-      <ul>
-        <li><a href="#install">Install</a></li>
-        <li><a href="#presets">Presets</a></li>
-        <li><a href="#configure">Configure</a></li>
-        <li><a href="#segments">Segments</a></li>
-        <li><a href="#colors-and-symbols">Symbols</a></li>
-        <li><a href="#faq">FAQ</a></li>
-        <li><a href="https://github.com/shehab267/ccbrief">GitHub</a></li>
-      </ul>
-    </nav>
+  <div class="top-inner">
+    <a class="brand" href="#intro" aria-label="ccbrief, back to top">ccbrief</a>
+    <ul class="top-links">
+      <li><a href="#install">Docs</a></li>
+      <li><a href="https://www.npmjs.com/package/ccbrief">npm</a></li>
+      <li><a href="https://github.com/shehab267/ccbrief">GitHub</a></li>
+    </ul>
   </div>
 </header>
 
-<main id="main" class="wrap">
+<main id="main">
 
-<section id="intro" aria-labelledby="intro-title">
-  <h1 id="intro-title">ccbrief</h1>
-  <p class="lede">A minimal, configurable status line for Claude Code: your context window, tokens,
-  session cost and rate-limit usage, at a glance in your terminal.</p>
+<section id="intro" class="hero" aria-labelledby="intro-title">
+  <h1 id="intro-title">The status line for Claude Code,<br> kept brief.</h1>
+  <p class="lede">ccbrief shows how full your context is, when your rate limit resets, what the session costs
+  and which model you're on, right under the prompt.</p>
 
-  <pre class="hero"><code>ccbrief/main │ 42% ━━━━───── │ ⏳2h 0m · 40% │ Opus 5.5</code></pre>
+  <!-- The centrepiece is the product itself: the default line, in the colors it really
+       prints (the same GitHub Dark palette as the demo GIF), with each part labelled. -->
+  <figure class="anatomy">
+    <div class="term">
+      <div class="term-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+      <p class="prompt" aria-hidden="true"><span class="t-dim">&gt;</span> fix the flaky login test<span class="cursor"></span></p>
+      <ul class="line" aria-label="The default status line, part by part">
+        <li><span class="seg"><span class="v">ccbrief/main</span><span class="k">Repo and branch</span></span></li>
+        <li><span class="seg"><span class="v"><span class="t-mag">42%</span> <span class="t-grn">━━━━</span><span class="t-dim">─────</span></span><span class="k">Context used</span></span></li>
+        <li><span class="seg"><span class="v"><span class="t-grn">⏳2h 0m</span><span class="t-dim"> · </span><span class="t-grn">40%</span></span><span class="k">5-hour limit: resets in, used</span></span></li>
+        <li><span class="seg"><span class="v t-cyn">Opus 5.5</span><span class="k">Model</span></span></li>
+      </ul>
+    </div>
+  </figure>
 
-  <pre class="cmd"><code>npx ccbrief init</code></pre>
+  <div class="get">
+    <pre class="cmd"><code>npx ccbrief init</code></pre>
+    <p>Needs Node 22 or newer. Runs on macOS, Linux, Windows and WSL. No restart needed.
+    <a href="https://www.npmjs.com/package/ccbrief">See ccbrief on npm</a>.</p>
+  </div>
 
-  <figure>
+  <figure class="demo">
     <a href="assets/ccbrief-demo.gif"><img src="assets/ccbrief-demo.gif" width="1240" height="720"
       alt="A terminal running npx ccbrief init, which installs ccbrief and prints a preview of the status line, then npx ccbrief config: the picker switches presets, turns on the session cost segment, moves it next to the context bar, cycles the symbol sets, toggles icons and saves. The live preview updates on every keypress."></a>
     <figcaption>Install, then choose what it shows. The badge on the right names each key as it is
@@ -87,9 +101,32 @@
   no telemetry.</p>
 </section>
 
+<div class="docs">
+
+<nav class="toc" aria-labelledby="toc-title">
+  <h2 id="toc-title">On this page</h2>
+  <ul>
+    <li><a href="#install">Install</a>
+      <ul>
+        <li><a href="#update">Update</a></li>
+        <li><a href="#uninstall">Uninstall</a></li>
+      </ul>
+    </li>
+    <li><a href="#presets">Presets</a></li>
+    <li><a href="#configure">Configure</a>
+      <ul><li><a href="#config-file">The config file</a></li></ul>
+    </li>
+    <li><a href="#segments">Segments</a></li>
+    <li><a href="#colors-and-symbols">Colors and symbols</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+</nav>
+
+<div class="content">
+
 <section id="install" aria-labelledby="install-title">
   <h2 id="install-title">Install</h2>
-  <pre><code>npx ccbrief init</code></pre>
+  <pre class="cmd"><code>npx ccbrief init</code></pre>
   <p>This copies a self-contained renderer into <code>~/.claude/ccbrief/</code>, backs up your
   <code>settings.json</code> and merges in the <code>statusLine</code> block. The rest of your settings
   stay as they are. It finishes with a preview and the next steps.</p>
@@ -98,7 +135,7 @@
   <p>Requires <strong>Node ≥ 22</strong>. Works on <strong>Windows, macOS, Linux and WSL</strong>.</p>
 
   <h3 id="update">Update</h3>
-  <pre><code>npx ccbrief@latest init</code></pre>
+  <pre class="cmd"><code>npx ccbrief@latest init</code></pre>
   <p>Re-running <code>init</code> is how you upgrade. It <em>copies</em> the renderer, so a newer
   package changes nothing until you run it again. It is safe to re-run: your config and settings are
   kept.</p>
@@ -106,7 +143,7 @@
   <code>ccbrief init</code>.</p>
 
   <h3 id="uninstall">Uninstall</h3>
-  <pre><code>npx ccbrief uninstall</code></pre>
+  <pre class="cmd"><code>npx ccbrief uninstall</code></pre>
   <p>Restores your backed-up <code>settings.json</code>, or strips just the <code>statusLine</code> block
   ccbrief added. It asks before removing <code>~/.claude/ccbrief/</code>.</p>
 </section>
@@ -123,20 +160,20 @@
   a segment or lets the terminal wrap mid-field:</p>
   <pre><code>ccbrief │ ccbrief/main │ +120/-34 │ 42% ━━━━───── │ 128k │ $1.23
 ⏳2h 0m · 40% │ wk 3d 4h · 62% │ high │ Opus 5.5</code></pre>
-  <p><strong>A segment with no data is hidden, never faked.</strong> Context % and rate limits are null
-  early in a session and right after <code>/compact</code>. You'll see fewer segments, never a made-up
-  <code>0%</code>.</p>
+  <p class="callout"><strong>A segment with no data is hidden, never faked.</strong> Context % and rate
+  limits are null early in a session and right after <code>/compact</code>. You'll see fewer segments,
+  never a made-up <code>0%</code>.</p>
 </section>
 
 <section id="configure" aria-labelledby="configure-title">
   <h2 id="configure-title">Configure</h2>
-  <pre><code>npx ccbrief config</code></pre>
+  <pre class="cmd"><code>npx ccbrief config</code></pre>
   <p>An interactive picker with a live preview. Every segment is listed, with a plain-English name.
   Saving also re-syncs <code>settings.json</code>, so changes show up on Claude Code's next render with
   no reinstall.</p>
 
   <div class="table-scroll">
-    <table>
+    <table class="keys">
       <caption>Picker keys</caption>
       <thead><tr><th scope="col">Key</th><th scope="col">Does</th></tr></thead>
       <tbody>
@@ -166,13 +203,13 @@
       <caption>Config keys</caption>
       <thead><tr><th scope="col">Key</th><th scope="col">Values</th><th scope="col">Default</th></tr></thead>
       <tbody>
-        <tr><td><code>preset</code></td><td><code>standard</code> · <code>detailed</code> · <code>custom</code></td><td><code>standard</code></td></tr>
-        <tr><td><code>layout</code></td><td><code>auto</code> · <code>single-line</code> (drops the segments that don't fit) · <code>multi-line</code></td><td><code>auto</code></td></tr>
+        <tr><td><code>preset</code></td><td><code>standard</code>, <code>detailed</code> or <code>custom</code></td><td><code>standard</code></td></tr>
+        <tr><td><code>layout</code></td><td><code>auto</code>, <code>single-line</code> (drops the segments that don't fit) or <code>multi-line</code></td><td><code>auto</code></td></tr>
         <tr><td><code>maxRows</code></td><td><code>1</code>–<code>3</code></td><td><code>3</code></td></tr>
-        <tr><td><code>symbols</code></td><td><code>simple</code> · <code>emoji</code> · <code>nerd-font</code> · <code>ascii</code></td><td><code>simple</code></td></tr>
-        <tr><td><code>colors</code></td><td><code>true</code> · <code>false</code></td><td><code>true</code></td></tr>
-        <tr><td><code>icons</code></td><td><code>true</code> · <code>false</code></td><td><code>true</code></td></tr>
-        <tr><td><code>segments</code></td><td>Ordered list, only read when <code>preset</code> is <code>custom</code></td><td>—</td></tr>
+        <tr><td><code>symbols</code></td><td><code>simple</code>, <code>emoji</code>, <code>nerd-font</code> or <code>ascii</code></td><td><code>simple</code></td></tr>
+        <tr><td><code>colors</code></td><td><code>true</code> or <code>false</code></td><td><code>true</code></td></tr>
+        <tr><td><code>icons</code></td><td><code>true</code> or <code>false</code></td><td><code>true</code></td></tr>
+        <tr><td><code>segments</code></td><td>Ordered list, only read when <code>preset</code> is <code>custom</code></td><td>None</td></tr>
       </tbody>
     </table>
   </div>
@@ -223,9 +260,11 @@
 
 <section id="colors-and-symbols" aria-labelledby="colors-title">
   <h2 id="colors-title">Colors and symbols</h2>
-  <p>Each field has its own color, so you can find it without reading it: context is magenta, tokens
-  yellow, the reset timer green, the model cyan. Only the context bar and the rate-limit percent change
-  color to signal state (green → yellow → red as they fill).</p>
+  <p>Each field has its own color, so you can find it without reading it: context is
+  <span class="swatch s-mag">magenta</span>, tokens <span class="swatch s-yel">yellow</span>, the reset
+  timer <span class="swatch s-grn">green</span>, the model <span class="swatch s-cyn">cyan</span>. Only
+  the context bar and the rate-limit percent change color to signal state (green, then yellow, then red
+  as they fill).</p>
   <p>Colors come from the standard ANSI palette, never hard-coded RGB, so your terminal theme resolves
   them and the line stays readable on dark and light themes alike.</p>
   <figure>
@@ -237,7 +276,7 @@
   default: plain text plus the ⏳ timer, no special font needed.</p>
   <pre><code>simple    ccbrief/main │ 42% ━━━━───── │ 128k │ ⏳2h 0m · 40% │ high │ Opus 5.5
 emoji     🌿ccbrief/main │ 42% ━━━━───── │ 🔸128k │ ⏳2h 0m · 40% │ ⚡high │ 🧠Opus 5.5
-nerd-font   ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │  high │  Opus 5.5
+nerd-font   ccbrief/main │ 42% ━━━━───── │ 128k │ ⧗ 2h 0m · 40% │  high │  Opus 5.5
 ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m · 40% | high | Opus 5.5</code></pre>
   <p><code>nerd-font</code> renders blank boxes unless you have a Nerd Font installed; the picker's live
   preview shows you before you commit. If the ⏳ timer shows as a box, your terminal has no emoji font:
@@ -269,8 +308,8 @@ ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m · 40% | high | Opus 5.5
 
     <dt>How is this different from a shell script with <code>jq</code>?</dt>
     <dd>A typical bash status line spawns <code>jq</code> once per field, around twenty processes on
-    every render. ccbrief is a single Node process that parses the session JSON once, and the renderer it installs
-    is one self-contained file with no dependencies.</dd>
+    every render. ccbrief is a single Node process that parses the session JSON once, and the renderer it
+    installs is one self-contained file with no dependencies.</dd>
 
     <dt>Can I choose which segments to show?</dt>
     <dd>Run <code>npx ccbrief config</code>. All fifteen segments are listed with a live preview. See
@@ -278,20 +317,51 @@ ascii     ccbrief/main | 42% ####----- | 128k | S 2h 0m · 40% | high | Opus 5.5
   </dl>
 </section>
 
+</div>
+</div>
+
 </main>
 
 <footer class="foot">
-  <div class="wrap">
+  <div class="foot-inner">
+    <p class="made">Made by <a href="https://github.com/shehab267">Shehab Alhawary</a>, who wanted to
+    see the numbers that matter without leaving the prompt.</p>
     <ul class="links">
       <li><a href="https://github.com/shehab267/ccbrief">GitHub</a></li>
       <li><a href="https://www.npmjs.com/package/ccbrief">npm</a></li>
       <li><a href="https://github.com/shehab267/ccbrief/blob/main/CHANGELOG.md">Changelog</a></li>
-      <li><a href="https://github.com/shehab267/ccbrief/issues">Issues</a></li>
+      <li><a href="https://github.com/shehab267/ccbrief/issues">Report an issue</a></li>
       <li><a href="https://github.com/shehab267/ccbrief/blob/main/LICENSE">MIT license</a></li>
     </ul>
-    <p>ccbrief is open source under the MIT license, © shehab267. Not affiliated with or endorsed by
-    Anthropic.</p>
+    <p class="small">Not affiliated with or endorsed by Anthropic. Set in Atkinson Hyperlegible Next and
+    JetBrains Mono, both under the <a href="fonts/OFL-atkinson-hyperlegible-next.txt">SIL Open Font
+    License</a>.</p>
   </div>
 </footer>
+
+<script>
+  // Copy buttons for the commands. Added by script so the page works without JS.
+  if (navigator.clipboard) {
+    for (const pre of document.querySelectorAll('pre.cmd')) {
+      const code = pre.querySelector('code')
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'copy'
+      btn.textContent = 'Copy'
+      btn.setAttribute('aria-label', 'Copy ' + code.textContent)
+      btn.setAttribute('aria-live', 'polite')
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(code.textContent)
+          btn.textContent = 'Copied'
+        } catch {
+          btn.textContent = 'Select and copy'
+        }
+        setTimeout(() => { btn.textContent = 'Copy' }, 1600)
+      })
+      pre.append(btn)
+    }
+  }
+</script>
 </body>
 </html>
