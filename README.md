@@ -8,6 +8,14 @@ your context window, tokens, session cost and rate-limit usage, at a glance in y
 [![node](https://img.shields.io/node/v/ccbrief.svg)](https://nodejs.org)
 [![license](https://img.shields.io/npm/l/ccbrief.svg)](./LICENSE)
 
+![A terminal running `npx ccbrief init`, which installs ccbrief and prints a preview of the status
+line, then `npx ccbrief config`: the picker switches to the detailed preset, back to standard, turns on
+the session cost segment, moves it next to the context bar, cycles the symbol sets, turns icons off
+and on, and saves. The live preview updates on
+every keypress, and a badge on the right names each key as it is pressed.](https://raw.githubusercontent.com/shehab267/ccbrief/main/assets/ccbrief-demo.gif)
+
+<sub>Install, then choose what it shows. The badge on the right shows each key as it is pressed.</sub>
+
 ![The ccbrief status line for Claude Code, showing directory, git branch, lines changed, context-window
 usage with a bar, tokens, session cost, 5-hour and weekly rate-limit resets, reasoning effort and the
 active model — the same line rendered on a dark and a light terminal theme.](https://raw.githubusercontent.com/shehab267/ccbrief/main/assets/ccbrief-claude-code-statusline.png)
@@ -37,14 +45,6 @@ npx ccbrief init
 That copies a self-contained renderer into `~/.claude/ccbrief/`, backs up your `settings.json`, and
 merges in the `statusLine` block — leaving everything else in your settings untouched. It finishes by
 showing you a preview and what to do next.
-
-![A terminal running `npx ccbrief init`, which installs ccbrief and prints a preview of the status
-line, then `npx ccbrief config`: the picker switches to the detailed preset, back to standard, turns on
-the session cost segment, moves it next to the context bar, cycles the symbol sets, turns icons off
-and on, and saves. The live preview updates on
-every keypress, and a badge on the right names each key as it is pressed.](https://raw.githubusercontent.com/shehab267/ccbrief/main/assets/ccbrief-demo.gif)
-
-<sub>Install, then choose what it shows. The badge on the right shows each key as it is pressed.</sub>
 
 **No restart needed.** Claude Code reloads its settings on its own, so your status line appears the next
 time you interact with it.
