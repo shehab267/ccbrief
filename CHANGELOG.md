@@ -6,10 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-10-27
+
+No change to the status line itself. This release updates what npm shows: the docs website as
+the package homepage, a clearer description and the new README.
+
 ### Docs
 - **A docs website:** [shehab267.github.io/ccbrief](https://shehab267.github.io/ccbrief/). One page
   covering install, presets, the picker, every segment and the symbol sets, published from
-  `site/` to GitHub Pages.
+  `site/` to GitHub Pages. It leads with the real status line, labelled part by part, and links
+  to npm from the top bar and the install command.
+- The package `homepage` is the docs website, and the description says "status line
+  (statusline)", the way people search for it.
+- The README shows the demo GIF at the top and says how to install from npm in its first lines.
 - The README's `nerd-font` example line shows its icons again; it had lost them.
 
 ## [0.4.0] — 2026-10-26
@@ -256,7 +265,8 @@ version that actually does something.
   control characters before rendering, and PR links are wrapped as terminal
   hyperlinks only for `http(s)` URLs.
 
-[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/shehab267/ccbrief/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/shehab267/ccbrief/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/shehab267/ccbrief/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/shehab267/ccbrief/compare/v0.3.1...v0.3.2
