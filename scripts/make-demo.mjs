@@ -146,10 +146,12 @@ const card = `<!doctype html><meta charset="utf-8"><style>${CSS}
   .card{width:1280px;height:640px;padding:54px 64px;display:flex;flex-direction:column;justify-content:center;gap:34px}
   .top{display:flex;align-items:flex-end;justify-content:space-between}
   .eyebrow{font-size:13px;letter-spacing:.28em;text-transform:uppercase;color:#56b6c2;margin-bottom:10px}
-  .wordmark{font-size:56px;font-weight:700;letter-spacing:-.035em;line-height:1}
-  /* The context bar is ccbrief's most recognisable mark, so it does the work a
-     generic gradient rule would otherwise be doing. */
-  .rule{font-size:19px;letter-spacing:-.08em;margin-top:12px}
+  /* The wordmark is the logo, drawn the same way as on the docs site: Claude Code's
+     orange on "cc", fading into the text color across "brief", set in the site's
+     own font (loaded from site/fonts so the card can't drift from the site). */
+  @font-face{font-family:'Atkinson Hyperlegible Next';src:url('../site/fonts/atkinson-hyperlegible-next.woff2') format('woff2');font-weight:200 800}
+  .wordmark{font:800 64px/1 'Atkinson Hyperlegible Next',system-ui,sans-serif;letter-spacing:-.03em;
+    background:linear-gradient(90deg,#d97757 0 28%,#e6e9ef 78%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:4px}
   .chip{border:1px solid #2c313c;border-radius:7px;padding:11px 15px;font-size:16px;color:#e6e9ef}
   .panes{display:flex;flex-direction:column;gap:9px}
   .panes .pane{padding:20px 24px;line-height:1.75}
@@ -162,7 +164,6 @@ const card = `<!doctype html><meta charset="utf-8"><style>${CSS}
     <div>
       <p class="eyebrow">Status line for Claude Code</p>
       <h1 class="wordmark">ccbrief</h1>
-      <p class="rule"><span style="color:#98c379">━━━━</span><span style="color:#abb2bf;opacity:.35">─────</span></p>
     </div>
     <span class="chip">npx ccbrief init</span>
   </div>
