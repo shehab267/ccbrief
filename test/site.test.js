@@ -60,3 +60,43 @@ test('every in-page link has a target', () => {
   assert.ok(anchors.length > 0)
   for (const a of anchors) assert.ok(ids.has(a), `href="#${a}" has no matching id`)
 })
+
+// Search engines read the page through its <head>. One canonical URL, and
+// nothing that tells a crawler to stay away.
+const canonical = html.match(/<link rel="canonical" href="([^"]+)">/)?.[1]
+
+test('the page has a canonical URL and is not marked noindex', () => {
+  assert.equal(canonical, 'https://shehab267.github.io/ccbrief/')
+  assert.doesNotMatch(html, /noindex/i)
+})
+
+// A typo in hand-written JSON-LD fails silently: search engines just drop it.
+// Ratings and reviews are left out on purpose: there are none, and inventing
+// them would break the project's rule against fake values.
+test('the structured data parses and points at the canonical URL', () => {
+  const block = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)
+  assert.ok(block, 'site is missing its JSON-LD block')
+  const data = JSON.parse(block[1])
+  assert.equal(data['@type'], 'SoftwareApplication')
+  assert.equal(data.name, 'ccbrief')
+  assert.equal(data.url, canonical)
+  assert.equal(data.aggregateRating, undefined)
+  assert.equal(data.review, undefined)
+})
+
+// npm shows `homepage` as the package's website link, so it has to be the
+// same address the page calls canonical.
+test('package.json homepage is the canonical URL', () => {
+  const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  assert.equal(pkg.homepage, canonical)
+})
+
+// A project page can't point to its sitemap from robots.txt (only the domain
+// root's robots.txt is read, and that belongs to another repo), so it is
+// submitted by hand in Search Console. No <lastmod>: a hand-kept date goes
+// stale, and search engines ignore one they learn not to trust.
+test('the sitemap lists exactly the canonical URL', () => {
+  const sitemap = readFileSync(new URL('../site/sitemap.xml', import.meta.url), 'utf8')
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
+  assert.deepEqual(locs, [canonical])
+})
