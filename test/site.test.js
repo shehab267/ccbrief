@@ -90,3 +90,13 @@ test('package.json homepage is the canonical URL', () => {
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
   assert.equal(pkg.homepage, canonical)
 })
+
+// A project page can't point to its sitemap from robots.txt (only the domain
+// root's robots.txt is read, and that belongs to another repo), so it is
+// submitted by hand in Search Console. No <lastmod>: a hand-kept date goes
+// stale, and search engines ignore one they learn not to trust.
+test('the sitemap lists exactly the canonical URL', () => {
+  const sitemap = readFileSync(new URL('../site/sitemap.xml', import.meta.url), 'utf8')
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
+  assert.deepEqual(locs, [canonical])
+})
