@@ -2,6 +2,7 @@
 
 A minimal, configurable **status line (statusline) for [Claude Code](https://claude.com/claude-code)** —
 your context window, tokens, session cost and rate-limit usage, at a glance in your terminal.
+Install it from [npm](https://www.npmjs.com/package/ccbrief) with one command: `npx ccbrief init`.
 
 [![CI](https://github.com/shehab267/ccbrief/actions/workflows/ci.yml/badge.svg)](https://github.com/shehab267/ccbrief/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/ccbrief.svg)](https://www.npmjs.com/package/ccbrief)
