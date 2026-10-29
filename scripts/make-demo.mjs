@@ -172,7 +172,7 @@ const card = `<!doctype html><meta charset="utf-8"><style>${CSS}
     ${pane('light', [detailed], { size: CARD_SIZE })}
   </div>
   <div class="foot">
-    <span><b>Context, tokens, cost and rate limits</b> — at a glance.</span>
+    <span><b>Context, tokens, cost and rate limits</b> in your terminal.</span>
     <span class="meta">zero runtime deps · no telemetry · MIT</span>
   </div>
 </div>`
