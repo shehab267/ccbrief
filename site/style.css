@@ -45,8 +45,11 @@
   color-scheme: light dark;
 }
 
+/* Dark follows the OS until the reader picks a theme with the header button, which
+   sets data-theme on <html>. The dark values are written twice (once for the OS
+   setting, once for the button) because the page has no build step to share them. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --page: #16191d;
     --ink: #e2e6ea;
     --muted: #9aa4af;
@@ -59,6 +62,19 @@
     --term-edge: #30363d;
   }
 }
+:root[data-theme="dark"] {
+  --page: #16191d;
+  --ink: #e2e6ea;
+  --muted: #9aa4af;
+  --rule: #2b3138;
+  --raised: #1f242a;
+  --code-bg: #242a31;
+  --accent: #4fc3cc;
+  --cc: #d97757;
+  --term-edge: #30363d;
+  color-scheme: dark;
+}
+:root[data-theme="light"] { color-scheme: light; }
 
 @media (min-width: 40rem) {
   :root { --gutter: 24px; }
@@ -151,6 +167,36 @@ a:hover { text-decoration-thickness: 2px; }
 }
 .top-links a { color: var(--muted); text-decoration: none; }
 .top-links a:hover { color: var(--ink); text-decoration: underline; }
+/* Push the links right so the theme button sits after them, not between. */
+.top-links { margin-left: auto; }
+
+/* Theme button. It shows the theme you would switch to: a moon on light, a sun on
+   dark. Hidden in the HTML and revealed by the script, so it never shows without JS. */
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.theme-toggle[hidden] { display: none; }
+.theme-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.theme-toggle svg { width: 1rem; height: 1rem; }
+.theme-toggle .sun { display: none; }
+:root[data-theme="dark"] .theme-toggle .sun { display: block; }
+:root[data-theme="dark"] .theme-toggle .moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-toggle .sun { display: block; }
+  :root:not([data-theme="light"]) .theme-toggle .moon { display: none; }
+}
+@media (max-width: 24rem) {
+  .top-links { gap: .9rem; }
+}
 
 /* ---------- Hero ---------- */
 
