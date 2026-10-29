@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-29
+
+No change to the status line itself. This release updates what npm shows: the rewritten README
+and a plainer package description.
+
+### Docs
+- The README, the docs website and the npm description are rewritten in plainer language. The
+  facts, commands and examples are the same.
+- The README and site no longer say the `detailed` preset shows everything. They list what it
+  adds, since it shows 10 of the 15 segments.
+- The docs website has a button in the header to switch between light and dark.
+- The social card (the image link previews show) no longer has a dash in its tagline.
+
 ## [0.4.1] — 2026-10-27
 
 No change to the status line itself. This release updates what npm shows: the docs website as
@@ -265,7 +278,8 @@ version that actually does something.
   control characters before rendering, and PR links are wrapped as terminal
   hyperlinks only for `http(s)` URLs.
 
-[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/shehab267/ccbrief/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/shehab267/ccbrief/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/shehab267/ccbrief/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/shehab267/ccbrief/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/shehab267/ccbrief/compare/v0.3.2...v0.3.3
